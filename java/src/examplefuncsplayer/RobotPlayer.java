@@ -31,6 +31,8 @@ public class RobotPlayer {
      */
     static final Random rng = new Random(6147);
 
+    /** test commit */ 
+
     /** Array containing all the possible movement directions. */
     static final Direction[] directions = {
         Direction.NORTH,
