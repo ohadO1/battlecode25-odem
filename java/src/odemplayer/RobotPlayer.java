@@ -10,10 +10,9 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
-
 //NOTE: document well each function, will help us in later stages of the project
 
-public class RobotPlayer {
+public class RobotPlayer extends Globals {
 
   private enum MessageType {
     SAVE_CHIPS
@@ -161,6 +160,8 @@ public class RobotPlayer {
         rc.move(dir);
       }
 
+      // NOTE: this might cause some bugs (what happens if one soldier think its a
+      // paint tower and the other thinks its a money tower)
       MapLocation checkMarked = targetLocation.subtract(dir);
       if (rc.senseMapInfo(checkMarked).getMark() == PaintType.EMPTY
           && rc.canMarkTowerPattern(UnitType.LEVEL_ONE_PAINT_TOWER, targetLocation)) {
@@ -179,6 +180,7 @@ public class RobotPlayer {
         }
       }
 
+      // TODO: make it not random
       if (rc.canCompleteTowerPattern(UnitType.LEVEL_ONE_PAINT_TOWER, targetLocation)) {
         rc.completeTowerPattern(UnitType.LEVEL_ONE_PAINT_TOWER, targetLocation);
       }
@@ -316,13 +318,13 @@ public class RobotPlayer {
    * @return next location - MapLocation
    */
   public static MapLocation roamGracefullyf(RobotController rc) throws GameActionException {
-    MapInfo[] nearbyTiles = rc.senseNearbyMapInfos();
+    MapInfo[] nearbyTiles = rc.senseNearbyMapInfos(2);
     for (MapInfo tile : nearbyTiles) {
       if (tile.isWall()) {
         MapLocation wallLocation = tile.getMapLocation();
         Direction dir = rc.getLocation().directionTo(wallLocation).opposite();
         if (rc.canMove(dir)) {
-          //NOTE: for testing purposes, remove after finished
+          // NOTE: for testing purposes, remove after finished
           rc.setIndicatorDot(rc.getLocation(), 0, 0, 255);
           rc.move(dir);
           return rc.getLocation().add(dir);
