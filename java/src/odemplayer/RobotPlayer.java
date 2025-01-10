@@ -10,6 +10,9 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+
+//NOTE: document well each function, will help us in later stages of the project
+
 public class RobotPlayer {
 
   private enum MessageType {
@@ -94,19 +97,20 @@ public class RobotPlayer {
 
       Direction dir = directions[rng.nextInt(directions.length)];
       MapLocation nextLocation = rc.getLocation().add(dir);
-      int robotType = rng.nextInt(3);
+      int robotType = rng.nextInt(4);
 
-      if (robotType == 0 && rc.canBuildRobot(UnitType.SOLDIER, nextLocation)) {
+      // build more soldiers
+      if (robotType == 0 || robotType == 1 && rc.canBuildRobot(UnitType.SOLDIER, nextLocation)) {
         rc.buildRobot(UnitType.SOLDIER, nextLocation);
         System.out.println("BUILT A SOLDIER");
       }
 
-      else if (robotType == 1 && rc.canBuildRobot(UnitType.SPLASHER, nextLocation)) {
+      else if (robotType == 2 && rc.canBuildRobot(UnitType.SPLASHER, nextLocation)) {
         rc.buildRobot(UnitType.SPLASHER, nextLocation);
         System.out.println("BUILT A SPLASHER");
       }
 
-      else if (robotType == 2 && rc.canBuildRobot(UnitType.MOPPER, nextLocation)) {
+      else if (robotType == 3 && rc.canBuildRobot(UnitType.MOPPER, nextLocation)) {
         rc.buildRobot(UnitType.MOPPER, nextLocation);
         System.out.println("BUILT A MOPPER");
       }
@@ -181,11 +185,7 @@ public class RobotPlayer {
 
     }
 
-    Direction dir = directions[rng.nextInt(directions.length)];
-    MapLocation nextLoc = rc.getLocation().add(dir);
-    if (rc.canMove(dir)) {
-      rc.move(dir);
-    }
+    MapLocation nextLoc = roamGracefullyf(rc);
 
     if (rc.canAttack(nextLoc)) {
       MapInfo nextLocInfo = rc.senseMapInfo(nextLoc);
@@ -203,8 +203,8 @@ public class RobotPlayer {
     }
 
     if (isMessanger && isSaving && knownTowers.size() > 0) {
-      // TODO: find closest tower and go there
-      MapLocation destination = knownTowers.get(0);
+      MapLocation destination = findClosestTower(knownTowers, rc);
+
       Direction dir = rc.getLocation().directionTo(destination);
       // TODO: what happenes if mopper is facing a wall?
       if (rc.canMove(dir)) {
@@ -212,15 +212,16 @@ public class RobotPlayer {
       }
     }
 
-    Direction dir = directions[rng.nextInt(directions.length)];
-    MapLocation nextLoc = rc.getLocation().add(dir);
-    if (rc.canMove(dir)) {
-      rc.move(dir);
+    MapLocation nextLoc = roamGracefullyf(rc);
+
+    for (Direction tryMopDirection : directions) {
+      if (rc.canMopSwing(tryMopDirection)) {
+        rc.mopSwing(tryMopDirection);
+      }
     }
 
-    if (rc.canMopSwing(dir)) {
-      rc.mopSwing(dir);
-    } else if (rc.canAttack(nextLoc)) {
+    // TODO: attack by radius
+    if (rc.canAttack(nextLoc)) {
       rc.attack(nextLoc);
     }
 
@@ -234,7 +235,7 @@ public class RobotPlayer {
 
   public static void runSplasher(RobotController rc) throws GameActionException {
     Direction dir = directions[rng.nextInt(directions.length)];
-    MapLocation nextLoc = rc.getLocation().add(dir);
+    MapLocation nextLoc = roamGracefullyf(rc);
 
     if (rc.canMove(dir)) {
       rc.move(dir);
@@ -251,7 +252,6 @@ public class RobotPlayer {
       if (!ally.getType().isTowerType())
         continue;
 
-      // TODO: what to do with known towers
       MapLocation allyLocation = ally.location;
       if (knownTowers.contains(allyLocation)) {
         if (isSaving) {
@@ -291,7 +291,53 @@ public class RobotPlayer {
       // check if there is a ruin but there is no robot on top of the ruin (tower)
       isSaving = true;
     }
+  }
 
+  // TODO: make it generic?
+  public static MapLocation findClosestTower(ArrayList<MapLocation> knownTowersLocations, RobotController rc) {
+    int distance = 99999;
+    MapLocation closestLocation = null;
+
+    for (MapLocation location : knownTowersLocations) {
+      int foundDistance = location.distanceSquaredTo(rc.getLocation());
+      if (distance > foundDistance) {
+        distance = foundDistance;
+        closestLocation = location;
+        continue;
+      }
+    }
+    return closestLocation;
+  }
+
+  /**
+   * method that avoids walls when roaming (no task yet)
+   * 
+   * @param rc - RobotController
+   * @return next location - MapLocation
+   */
+  public static MapLocation roamGracefullyf(RobotController rc) throws GameActionException {
+    MapInfo[] nearbyTiles = rc.senseNearbyMapInfos();
+    for (MapInfo tile : nearbyTiles) {
+      if (tile.isWall()) {
+        MapLocation wallLocation = tile.getMapLocation();
+        Direction dir = rc.getLocation().directionTo(wallLocation).opposite();
+        if (rc.canMove(dir)) {
+          //NOTE: for testing purposes, remove after finished
+          rc.setIndicatorDot(rc.getLocation(), 0, 0, 255);
+          rc.move(dir);
+          return rc.getLocation().add(dir);
+        }
+        return null;
+      }
+    }
+
+    Direction dir = directions[rng.nextInt(directions.length)];
+
+    if (rc.canMove(dir)) {
+      rc.move(dir);
+    }
+
+    return rc.getLocation().add(dir);
   }
 
 }
