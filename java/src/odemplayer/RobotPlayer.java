@@ -52,7 +52,6 @@ public class RobotPlayer {
     }
 
     while (true) {
-
       turnCount++;
 
       // if a mopper is a messanger
@@ -88,6 +87,7 @@ public class RobotPlayer {
   public static void runTower(RobotController rc) throws GameActionException {
 
     if (savingTurns == 0) {
+      isSaving = false;
       if (rc.canUpgradeTower(rc.getLocation())) {
         rc.upgradeTower(rc.getLocation());
       }
@@ -127,9 +127,10 @@ public class RobotPlayer {
     for (Message m : messages) {
       System.out.println("Tower received message: '#" + m.getSenderID() + " " + m.getBytes());
 
-      if (m.getBytes() == MessageType.SAVE_CHIPS.ordinal()) {
+      if (m.getBytes() == MessageType.SAVE_CHIPS.ordinal() && !isSaving) {
         // TODO: Make more specific
-        savingTurns = 10;
+        savingTurns = 50;
+        isSaving = true;
       }
     }
   }
