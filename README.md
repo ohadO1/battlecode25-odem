@@ -1,5 +1,5 @@
 # Battlecode 2025 Scaffold
-
+test
 This is the Battlecode 2025 scaffold, containing starter code and useful scripts for running and compiling your bot.
 
 **We are using a rewritten version of the client this year, so please let teh devs know 
