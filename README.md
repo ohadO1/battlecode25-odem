@@ -14,3 +14,6 @@ if you encounter any issues or have any feedback!**
    Scaffold for the Python engine. If Python is your preferred language, please use this subdirectory and follow the README file included there.
 
 Keep in mind, Python is **EXPERIMENTAL**, and not eligible to participate against other java bots. Please see the website for more details.
+
+
+![shrek human](https://github.com/user-attachments/assets/c1a7061b-7fb7-4576-a147-75f88164514a)
