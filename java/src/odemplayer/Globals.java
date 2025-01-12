@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Random;
 
 import battlecode.common.Direction;
-import battlecode.common.MapLocation;
+import battlecode.common.RobotInfo;
 
 public class Globals {
 
@@ -16,7 +16,8 @@ public class Globals {
   // TODO: get width and height of the map for further calculations
   //
   static int turnCount = 0;
-  public enum GAME_PHASAE{
+
+  public enum GAME_PHASAE {
     early,
     mid,
     late,
@@ -25,7 +26,7 @@ public class Globals {
   // messanger:
   static boolean isMessanger = false;
 
-  static ArrayList<MapLocation> knownTowers = new ArrayList<>();
+  static ArrayList<RobotInfo> knownTowersInfos = new ArrayList<>();
 
   static boolean isSaving = false;
   //

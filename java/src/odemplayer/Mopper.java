@@ -15,9 +15,9 @@ public class Mopper extends Globals {
       rc.setIndicatorDot(rc.getLocation(), 0, 255, 0);
     }
 
-    if (isMessanger && isSaving && knownTowers.size() > 0) {
+    if (isMessanger && isSaving && knownTowersInfos.size() > 0) {
       // TODO: move to utils
-      MapLocation destination = Utils.findClosestTower(knownTowers, rc);
+      MapLocation destination = Utils.findClosestTower(knownTowersInfos, rc);
 
       Direction dir = rc.getLocation().directionTo(destination);
       // TODO: what happens if mopper is facing a wall?
@@ -55,7 +55,11 @@ public class Mopper extends Globals {
         continue;
 
       MapLocation allyLocation = ally.location;
-      if (knownTowers.contains(allyLocation)) {
+
+      RobotInfo knownTowersAllyLocation = knownTowersInfos.stream()
+          .filter(tower -> tower.location == ally.location).findFirst().orElse(null);
+
+      if (knownTowersAllyLocation != null) {
         if (isSaving) {
           if (rc.canSendMessage(allyLocation)) {
             rc.sendMessage(allyLocation, MessageType.SAVE_CHIPS.ordinal());
@@ -65,8 +69,7 @@ public class Mopper extends Globals {
 
         continue;
       }
-
-      knownTowers.add(allyLocation);
+      knownTowersInfos.add(ally);
     }
 
   }

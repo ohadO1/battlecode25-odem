@@ -7,6 +7,7 @@ import battlecode.common.GameActionException;
 import battlecode.common.MapInfo;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
+import battlecode.common.RobotInfo;
 
 //NOTE: document well each function, will help us in later stages of the project
 //
@@ -50,11 +51,12 @@ public class Utils extends Globals {
    * @param knownTowersLocations - ArrayList<MapLocation>
    * @return closestTowerLocation - MapLocation
    */
-  public static MapLocation findClosestTower(ArrayList<MapLocation> knownTowersLocations, RobotController rc) {
+  public static MapLocation findClosestTower(ArrayList<RobotInfo> knownTowersInfo, RobotController rc) {
     int distance = 99999;
     MapLocation closestLocation = null;
 
-    for (MapLocation location : knownTowersLocations) {
+    for (RobotInfo knownTower : knownTowersInfos) {
+      MapLocation location = knownTower.getLocation();
       int foundDistance = location.distanceSquaredTo(rc.getLocation());
       if (distance > foundDistance) {
         distance = foundDistance;
