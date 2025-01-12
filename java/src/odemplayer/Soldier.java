@@ -104,7 +104,7 @@ class Soldier extends Globals {
       //region notify tower
         case SOLDIER_STATES.notifyTower:
         MapLocation dest = Utils.findClosestTower(knownTowersLocations, rc);
-        Pathfind(dest);
+        Pathfinder.(dest);
         if(rc.canSendMessage(dest)) {
           rc.sendMessage(dest,encodeMessage(MESSAGE_TYPE.buildTowerHere,towerLocation));
 
