@@ -8,6 +8,8 @@ import battlecode.common.PaintType;
 import battlecode.common.RobotController;
 import battlecode.common.UnitType;
 
+import java.util.ArrayList;
+
 class Soldier extends Globals {
 
   enum SOLDIER_STATES{
@@ -19,75 +21,96 @@ class Soldier extends Globals {
   }
 
   static SOLDIER_STATES state = SOLDIER_STATES.roam;
-
+  static MapInfo ruinDest = null;
+  static ArrayList<MapLocation> knownTowersLocations;
   // TODO: too long and clumsy - organize
   public static void runSoldier(RobotController rc) throws GameActionException {
 
-    switch (state){
+    switch (state) {
 
-        //region Roam
-        case roam:
+      //region roam
+      case roam:
 
         //search for the closest ruin in range
         MapInfo[] nearbyTiles = rc.senseNearbyMapInfos();
-        MapInfo currentRuin = null;
         int currentDistance = 99999;
-
         for (MapInfo tile : nearbyTiles) {
           if (tile.hasRuin()) {
             int distance = tile.getMapLocation().distanceSquaredTo(rc.getLocation());
             if (distance < currentDistance) {
-              currentRuin = tile;
+              ruinDest = tile;
               currentDistance = distance;
             }
           }
         }
 
+        //TODO: search for enemy towers and call an attack
+        //if found ruin, decide what to do about it.
+        if (ruinDest != null) {
+          if (true)  //shouldIBuild(findClosestTower(knownTowersLocations,rc),rc.getPaint())
+            state = SOLDIER_STATES.buildTower;
+          else
+            state = SOLDIER_STATES.notifyTower;
+        }
+        //if didn't find ruin, wander around.
+        else {
+          MapLocation nextLoc = Utils.roamGracefullyf(rc);
 
-        //if found ruin, go there.
-        if (currentRuin != null) {
-          MapLocation targetLocation = currentRuin.getMapLocation();
-          Direction dir = rc.getLocation().directionTo(targetLocation);
-          if (rc.canMove(dir)) {
-            rc.move(dir);
-          }
-
-          MapLocation checkMarked = targetLocation.subtract(dir);
-          if (rc.senseMapInfo(checkMarked).getMark() == PaintType.EMPTY
-                  && rc.canMarkTowerPattern(UnitType.LEVEL_ONE_PAINT_TOWER, targetLocation)) {
-            rc.markTowerPattern(UnitType.LEVEL_ONE_PAINT_TOWER, targetLocation);
-          }
-
-          for (MapInfo patternTile : rc.senseNearbyMapInfos(targetLocation, 8)) {
-            if (patternTile.getMark() != patternTile.getPaint() && patternTile.getMark() != PaintType.EMPTY) {
-              if (rc.canAttack(patternTile.getMapLocation())) {
-                if (patternTile.getMark() == PaintType.ALLY_SECONDARY) {
-                  rc.attack(patternTile.getMapLocation(), true);
-                } else {
-                  rc.attack(patternTile.getMapLocation(), false);
-                }
-              }
+          if (rc.canAttack(nextLoc)) {
+            MapInfo nextLocInfo = rc.senseMapInfo(nextLoc);
+            if (!nextLocInfo.getPaint().isAlly()) {
+              rc.attack(nextLoc);
             }
           }
 
-          if (rc.canCompleteTowerPattern(UnitType.LEVEL_ONE_PAINT_TOWER, targetLocation)) {
-            rc.completeTowerPattern(UnitType.LEVEL_ONE_PAINT_TOWER, targetLocation);
-          }
+        }
+        break;
+      //endregion
+      //region build tower
+      case SOLDIER_STATES.buildTower:
 
+        //go to the ruin
+        MapLocation targetLocation = ruinDest.getMapLocation();
+        Direction dir = rc.getLocation().directionTo(targetLocation);
+        if (rc.canMove(dir)) {
+          rc.move(dir);
         }
 
-        MapLocation nextLoc = Utils.roamGracefullyf(rc);
+        //try to mark
+        MapLocation checkMarked = targetLocation.subtract(dir);
+        if (rc.senseMapInfo(checkMarked).getMark() == PaintType.EMPTY && rc.canMarkTowerPattern(UnitType.LEVEL_ONE_PAINT_TOWER, targetLocation)) {
+          rc.markTowerPattern(UnitType.LEVEL_ONE_PAINT_TOWER, targetLocation);
+        }
 
-        if (rc.canAttack(nextLoc)) {
-          MapInfo nextLocInfo = rc.senseMapInfo(nextLoc);
-          if (!nextLocInfo.getPaint().isAlly()) {
-            rc.attack(nextLoc);
+        //loop through marks. attack whatever is possible
+        boolean attacked = false;
+        MapInfo[] patternTiles = rc.senseNearbyMapInfos(targetLocation, 8);
+        for (int i = 0; i < patternTiles.length && !attacked; i++) {
+          if (patternTiles[i].getMark() != patternTiles[i].getPaint() && patternTiles[i].getMark() != PaintType.EMPTY && rc.canAttack(patternTiles[i].getMapLocation())) {
+            attacked = true;
+            rc.attack(patternTiles[i].getMapLocation(), patternTiles[i].getMark() == PaintType.ALLY_SECONDARY);
           }
+        }
+
+        //complete tower building
+        UnitType towerToBuild = null; //whatShouldIBuild(knownTowers,rc.getPaint(),targetLocation);
+        if (towerToBuild != null) {
+          rc.completeTowerPattern(towerToBuild, targetLocation);
+          state = SOLDIER_STATES.roam;
+        }
+
+        break;
+      //endregion
+      //region notify tower
+        case SOLDIER_STATES.notifyTower:
+        MapLocation dest = Utils.findClosestTower(knownTowersLocations, rc);
+        Pathfind(dest);
+        if(rc.canSendMessage(dest)) {
+          rc.sendMessage(dest,encodeMessage(MESSAGE_TYPE.buildTowerHere,towerLocation));
+          state = SOLDIER_STATES.roam;
         }
         break;
         //endregion
-
-
     }
 
 
