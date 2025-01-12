@@ -6,11 +6,7 @@ public class Tower extends Globals {
 
   // TODO: too long. improve
   public static void runTower(RobotController rc) throws GameActionException {
-    enum GAME_PHASAE{
-      early,
-      mid,
-      late,
-    }
+
     GAME_PHASAE current_phase = GAME_PHASAE.early;
 
     if (savingTurns == 0) {
