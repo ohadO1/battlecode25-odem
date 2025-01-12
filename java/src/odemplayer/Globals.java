@@ -8,21 +8,28 @@ import battlecode.common.MapLocation;
 
 public class Globals {
 
-  public enum MessageType {
-    SAVE_CHIPS
+  public enum MESSAGE_TYPE {
+    save_chips
   }
 
   // TODO: some of the globals should be more specific (tower or unit scope)
   // TODO: get width and height of the map for further calculations
   //
   static int turnCount = 0;
-  public enum GAME_PHASAE{
+
+  public enum GAME_PHASAE {
     early,
     mid,
     late,
   }
 
   // messanger:
+  //
+  public enum UNIT_ROLES {
+  }
+
+  UNIT_ROLES role = null;
+
   static boolean isMessanger = false;
 
   static ArrayList<MapLocation> knownTowers = new ArrayList<>();

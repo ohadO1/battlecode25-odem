@@ -58,7 +58,7 @@ public class Mopper extends Globals {
       if (knownTowers.contains(allyLocation)) {
         if (isSaving) {
           if (rc.canSendMessage(allyLocation)) {
-            rc.sendMessage(allyLocation, MessageType.SAVE_CHIPS.ordinal());
+            rc.sendMessage(allyLocation, MESSAGE_TYPE.save_chips.ordinal());
           }
           isSaving = false;
         }
