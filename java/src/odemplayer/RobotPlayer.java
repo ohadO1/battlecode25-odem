@@ -7,11 +7,10 @@ public class RobotPlayer extends Globals {
   // TODO: handle attacking enemy units
   public static void run(RobotController rc) throws GameActionException {
     if (rc.getType() == UnitType.MOPPER && rc.getID() % 2 == 0) {
-      System.out.println(rc.getID());
       // if a mopper is a messanger
-      isMessanger = true;
+      unitRole = UNIT_ROLES.messenger;
     }
-    
+
     while (true) {
       turnCount++;
 

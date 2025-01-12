@@ -26,11 +26,12 @@ public class Globals {
   // messanger:
   //
   public enum UNIT_ROLES {
+    messenger,
+    scout
   }
 
-  UNIT_ROLES role = null;
+  static UNIT_ROLES unitRole = null;
 
-  static boolean isMessanger = false;
 
   static ArrayList<MapLocation> knownTowers = new ArrayList<>();
 

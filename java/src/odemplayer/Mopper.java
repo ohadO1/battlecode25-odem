@@ -10,41 +10,44 @@ import battlecode.common.RobotInfo;
 public class Mopper extends Globals {
 
   public static void runMopper(RobotController rc) throws GameActionException {
-    if (isMessanger == true) {
-      System.out.println("IN IF STATEMENT, MARKING");
-      rc.setIndicatorDot(rc.getLocation(), 0, 255, 0);
+    switch (unitRole) {
+      case messenger:
+        if (isSaving && knownTowers.size() > 0) {
+          // TODO: move to utils
+          MapLocation destination = Utils.findClosestTower(knownTowers, rc);
+
+          Direction dir = rc.getLocation().directionTo(destination);
+          // TODO: what happens if mopper is facing a wall?
+          if (rc.canMove(dir)) {
+            rc.move(dir);
+          }
+        }
+        // NOTE: for debugging, remove when submitting
+        rc.setIndicatorDot(rc.getLocation(), 0, 255, 0);
+
+        updateFriendlyTowers(rc);
+        checkNearbyRuins(rc);
+        // tbd
+      case scout:
+
+      default:
     }
 
-    if (isMessanger && isSaving && knownTowers.size() > 0) {
-      // TODO: move to utils
-      MapLocation destination = Utils.findClosestTower(knownTowers, rc);
-
-      Direction dir = rc.getLocation().directionTo(destination);
-      // TODO: what happens if mopper is facing a wall?
-      if (rc.canMove(dir)) {
-        rc.move(dir);
-      }
-    }
-
+    // NOTE: this code will execute on every role assigned to the unit. this code
+    // needs to improve, no logic involved in roaming and attacking
     MapLocation nextLoc = Utils.roamGracefullyf(rc);
 
+    // how do we attack?
     for (Direction tryMopDirection : directions) {
       if (rc.canMopSwing(tryMopDirection)) {
         rc.mopSwing(tryMopDirection);
       }
     }
 
-    // TODO: attack by radius
     if (rc.canAttack(nextLoc)) {
       rc.attack(nextLoc);
     }
 
-    // if we are a messanger, we also want to update friendly towers and check for
-    // ruins
-    if (isMessanger) {
-      updateFriendlyTowers(rc);
-      checkNearbyRuins(rc);
-    }
   }
 
   public static void updateFriendlyTowers(RobotController rc) throws GameActionException {
