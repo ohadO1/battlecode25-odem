@@ -6,8 +6,13 @@ public class Tower extends Globals {
 
   // TODO: too long. improve
   public static void runTower(RobotController rc) throws GameActionException {
+
+    GAME_PHASAE current_phase = GAME_PHASAE.early;
+
     if (savingTurns == 0) {
       isSaving = false;
+
+      //upgrade if able
       if (rc.canUpgradeTower(rc.getLocation())) {
         rc.upgradeTower(rc.getLocation());
       }

@@ -16,6 +16,11 @@ public class Globals {
   // TODO: get width and height of the map for further calculations
   //
   static int turnCount = 0;
+  public enum GAME_PHASAE{
+    early,
+    mid,
+    late,
+  }
 
   // messanger:
   static boolean isMessanger = false;

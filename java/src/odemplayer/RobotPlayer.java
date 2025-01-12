@@ -1,9 +1,6 @@
 package odemplayer;
 
-import battlecode.common.Clock;
-import battlecode.common.GameActionException;
-import battlecode.common.RobotController;
-import battlecode.common.UnitType;
+import battlecode.common.*;
 
 public class RobotPlayer extends Globals {
 
@@ -15,7 +12,7 @@ public class RobotPlayer extends Globals {
       // if a mopper is a messanger
       isMessanger = true;
     }
-
+    
     while (true) {
       turnCount++;
 
