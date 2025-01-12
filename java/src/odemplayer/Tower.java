@@ -12,10 +12,10 @@ public class Tower extends Globals {
     if (savingTurns == 0) {
       isSaving = false;
 
-      //upgrade if able
-      if (rc.canUpgradeTower(rc.getLocation())) {
-        rc.upgradeTower(rc.getLocation());
-      }
+      // upgrade if able
+      // if (rc.canUpgradeTower(rc.getLocation())) {
+      // rc.upgradeTower(rc.getLocation());
+      // }
 
       Direction dir = directions[rng.nextInt(directions.length)];
       MapLocation nextLocation = rc.getLocation().add(dir);
