@@ -16,6 +16,7 @@ class Soldier extends Globals {
     MapInfo currentRuin = null;
     int currentDistance = 99999;
 
+    //search for the closest ruin in range
     for (MapInfo tile : nearbyTiles) {
       if (tile.hasRuin()) {
         int distance = tile.getMapLocation().distanceSquaredTo(rc.getLocation());
@@ -26,6 +27,7 @@ class Soldier extends Globals {
       }
     }
 
+    //if found ruin, go there.
     if (currentRuin != null) {
       MapLocation targetLocation = currentRuin.getMapLocation();
       Direction dir = rc.getLocation().directionTo(targetLocation);

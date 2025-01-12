@@ -20,7 +20,7 @@ public class Mopper extends Globals {
       MapLocation destination = Utils.findClosestTower(knownTowers, rc);
 
       Direction dir = rc.getLocation().directionTo(destination);
-      // TODO: what happenes if mopper is facing a wall?
+      // TODO: what happens if mopper is facing a wall?
       if (rc.canMove(dir)) {
         rc.move(dir);
       }
