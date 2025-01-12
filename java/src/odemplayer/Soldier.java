@@ -107,7 +107,11 @@ class Soldier extends Globals {
         Pathfind(dest);
         if(rc.canSendMessage(dest)) {
           rc.sendMessage(dest,encodeMessage(MESSAGE_TYPE.buildTowerHere,towerLocation));
-          state = SOLDIER_STATES.roam;
+
+          //should i fill paint?
+//          if(rc.getPaint() / rc.)
+
+          state = SOLDIER_STATES.buildTower;
         }
         break;
         //endregion
