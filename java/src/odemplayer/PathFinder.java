@@ -3,7 +3,6 @@ package odemplayer;
 
 import java.util.HashSet;
 
-import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
@@ -82,7 +81,6 @@ public class PathFinder extends Globals {
     if (!isTracing) {
       Direction dir = rc.getLocation().directionTo(target);
       rc.setIndicatorDot(rc.getLocation().add(dir), 255, 0, 0);
-      Clock.yield();
 
       if (rc.canMove(dir)) {
         rc.move(dir);
