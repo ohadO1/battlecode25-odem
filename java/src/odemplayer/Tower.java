@@ -8,9 +8,11 @@ public class Tower extends Globals {
   public static void runTower(RobotController rc) throws GameActionException {
     if (savingTurns == 0) {
       isSaving = false;
-      if (rc.canUpgradeTower(rc.getLocation())) {
-        rc.upgradeTower(rc.getLocation());
-      }
+
+      // upgrade if able
+      // if (rc.canUpgradeTower(rc.getLocation())) {
+      // rc.upgradeTower(rc.getLocation());
+      // }
 
       Direction dir = directions[rng.nextInt(directions.length)];
       MapLocation nextLocation = rc.getLocation().add(dir);
