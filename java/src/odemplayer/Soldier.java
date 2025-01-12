@@ -1,12 +1,6 @@
 package odemplayer;
 
-import battlecode.common.Direction;
-import battlecode.common.GameActionException;
-import battlecode.common.MapInfo;
-import battlecode.common.MapLocation;
-import battlecode.common.PaintType;
-import battlecode.common.RobotController;
-import battlecode.common.UnitType;
+import battlecode.common.*;
 
 import java.util.ArrayList;
 
@@ -17,13 +11,20 @@ class Soldier extends Globals {
     roam,           //walk randomly
     notifyTower,    //found a ruin im not able to build. walk to notify tower
     buildTower,     //found a ruin im able to build. build it.
+    refillFromTower,//go to a tower to refill paint.
     attack,         //found a tower with enough friends to attack it.
   }
 
   static SOLDIER_STATES state = SOLDIER_STATES.roam;
   static MapInfo ruinDest = null;
-  static ArrayList<MapLocation> knownTowersLocations;
-  // TODO: too long and clumsy - organize
+  static ArrayList<MapLocation> knownTowersLocations = new ArrayList<>();
+  static MapLocation dest;                                //multipurpose var for going to places, used differently in different states.
+
+  // TODO: refill from tower state
+  // TODO: attack state
+  // TODO: scout direction state
+  // TODO: run sense towers to, uh, sense towers
+  // TODO: optimize sense towers function below
   public static void runSoldier(RobotController rc) throws GameActionException {
 
     switch (state) {
@@ -103,16 +104,29 @@ class Soldier extends Globals {
       //endregion
       //region notify tower
         case SOLDIER_STATES.notifyTower:
-        MapLocation dest = Utils.findClosestTower(knownTowersLocations, rc);
-        Pathfinder.(dest);
-        if(rc.canSendMessage(dest)) {
-          rc.sendMessage(dest,encodeMessage(MESSAGE_TYPE.buildTowerHere,towerLocation));
 
-          //should i fill paint?
-//          if(rc.getPaint() / rc.)
+          dest = Utils.findClosestTower(knownTowersLocations, rc);
+          PathFinder.moveToLocation(rc,dest);
+          if(rc.canSendMessage(dest)) {
+            rc.sendMessage(dest,encodeMessage(MESSAGE_TYPE.buildTowerHere,ruinDest));
 
-          state = SOLDIER_STATES.buildTower;
-        }
+            //if its a paint tower, goto refill paint
+            RobotInfo tower = rc.senseRobotAtLocation(dest);
+            if(tower.getTeam() == rc.getTeam()
+                    && (tower.getType().equals(UnitType.LEVEL_ONE_PAINT_TOWER)
+                      || tower.getType().equals(UnitType.LEVEL_TWO_PAINT_TOWER))
+                      || tower.getType().equals(UnitType.LEVEL_THREE_PAINT_TOWER)) {
+              state = SOLDIER_STATES.refillFromTower;
+            }
+            //else, look for a paint tower to refill from
+            else {
+
+
+
+            }
+
+            state = SOLDIER_STATES.buildTower;
+          }
         break;
         //endregion
     }
@@ -120,6 +134,26 @@ class Soldier extends Globals {
 
 
 
+  }
+
+  //run this every once in a while to sense towers
+  private void senseTowers(RobotController rc){
+
+    ArrayList<UnitType> towerTypes = new ArrayList<>();
+    towerTypes.add(UnitType.LEVEL_ONE_PAINT_TOWER);
+    towerTypes.add(UnitType.LEVEL_TWO_PAINT_TOWER);
+    towerTypes.add(UnitType.LEVEL_THREE_PAINT_TOWER);
+    towerTypes.add(UnitType.LEVEL_ONE_DEFENSE_TOWER);
+    towerTypes.add(UnitType.LEVEL_TWO_DEFENSE_TOWER);
+    towerTypes.add(UnitType.LEVEL_THREE_DEFENSE_TOWER);
+    towerTypes.add(UnitType.LEVEL_ONE_MONEY_TOWER);
+    towerTypes.add(UnitType.LEVEL_TWO_MONEY_TOWER);
+    towerTypes.add(UnitType.LEVEL_THREE_MONEY_TOWER);
+
+    for(RobotInfo robot : rc.senseNearbyRobots()){
+      if(robot.getTeam() == rc.getTeam() && towerTypes.contains(robot.getType()))
+        knownTowers.add(robot.getLocation());
+    }
   }
 
 }
