@@ -13,7 +13,6 @@ public class PathFinder extends Globals {
 
   static private boolean isTracing = false;
   static private Direction tracingDir;
-  static public MapLocation target;
   static private HashSet<MapLocation> line = null;
   static private MapLocation prevDest = null;
   static int obstacleStartDist;
@@ -63,7 +62,14 @@ public class PathFinder extends Globals {
     return locs;
   }
 
-  public static void pathFinder(RobotController rc) throws GameActionException {
+  /**
+   * moves to location even when facing walls
+   * 
+   * @param rc     - RobotController
+   * @param target - MapLocation (target location)
+   * @returns - void
+   */
+  public static void moveToLocation(RobotController rc, MapLocation target) throws GameActionException {
     if (!target.equals(prevDest)) {
       prevDest = target;
       line = createLine(rc.getLocation(), target);
