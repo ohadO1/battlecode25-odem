@@ -5,7 +5,6 @@ import battlecode.common.*;
 public class RobotPlayer extends Globals {
 
   // TODO: handle attacking enemy units
-
   public static void run(RobotController rc) throws GameActionException {
     if (rc.getType() == UnitType.MOPPER && rc.getID() % 2 == 0) {
       System.out.println(rc.getID());
