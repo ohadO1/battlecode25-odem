@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Random;
 
 import battlecode.common.Direction;
+import battlecode.common.RobotInfo;
 import battlecode.common.MapLocation;
 import battlecode.common.UnitType;
 
@@ -18,13 +19,16 @@ public class Globals {
   //
   static int turnCount = 0;
 
-  public enum GAME_PHASE{
+  public enum GAME_PHASE {
     early,
     mid,
     late,
   }
 
-  static ArrayList<MapLocation> knownTowers = new ArrayList<>();
+  // messanger:
+  static boolean isMessanger = false;
+
+  static ArrayList<RobotInfo> knownTowersInfos = new ArrayList<>();
 
   static boolean isSaving = false;
   //
