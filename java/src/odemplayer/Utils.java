@@ -103,7 +103,7 @@ public class Utils extends Globals {
   */
 
   public static int encodeMessage(MESSAGE_TYPE type, MapLocation location){  //ask for refill
-    int ret = Arrays.binarySearch(messageTypesIndexes,type);
+    int ret = type.ordinal();
 
     switch(type){
       case MESSAGE_TYPE.buildTowerHere:
