@@ -19,7 +19,7 @@ public class Globals {
   //
   static int turnCount = 0;
 
-  public enum GAME_PHASE{
+  public enum GAME_PHASE {
     early,
     mid,
     late,
