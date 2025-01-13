@@ -49,7 +49,7 @@ class Soldier extends Globals {
   // TODO: search for enemy towers and call an attack
 
   public static void runSoldier(RobotController rc) throws GameActionException {
-  
+
     Utils.updateFriendlyTowers(rc);
 
     switch (state) {
@@ -154,26 +154,6 @@ class Soldier extends Globals {
     stateChanged = state != statePrev;
     statePrev = state;
 
-  }
-
-  //run this every once in a while to sense towers
-  public static void senseTowers(RobotController rc){
-
-    ArrayList<UnitType> towerTypes = new ArrayList<>();
-    towerTypes.add(UnitType.LEVEL_ONE_PAINT_TOWER);
-    towerTypes.add(UnitType.LEVEL_TWO_PAINT_TOWER);
-    towerTypes.add(UnitType.LEVEL_THREE_PAINT_TOWER);
-    towerTypes.add(UnitType.LEVEL_ONE_DEFENSE_TOWER);
-    towerTypes.add(UnitType.LEVEL_TWO_DEFENSE_TOWER);
-    towerTypes.add(UnitType.LEVEL_THREE_DEFENSE_TOWER);
-    towerTypes.add(UnitType.LEVEL_ONE_MONEY_TOWER);
-    towerTypes.add(UnitType.LEVEL_TWO_MONEY_TOWER);
-    towerTypes.add(UnitType.LEVEL_THREE_MONEY_TOWER);
-
-    for(RobotInfo robot : rc.senseNearbyRobots()){
-      if(robot.getTeam() == rc.getTeam() && towerTypes.contains(robot.getType()))
-        knownTowersInfos.add(robot);
-    }
   }
 
 }
