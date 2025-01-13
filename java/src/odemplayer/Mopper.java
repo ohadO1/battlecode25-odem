@@ -114,6 +114,16 @@ public class Mopper extends Globals {
         role = MOPPER_ROLES.messenger;
       default:
         role = MOPPER_ROLES.normal;
+  /**
+   * @param - how much paint to take or give to the unit (positive to give,
+   *          negative to take)
+   */
+
+  public static void tranferPaintToUnit(RobotController rc, int amount,
+      MapLocation targetLocation) {
+    MapLocation currentLocation = rc.getLocation();
+    if (currentLocation.distanceSquaredTo(targetLocation) < Math.sqrt(2)) {
+
     }
   }
 
