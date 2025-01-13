@@ -5,6 +5,7 @@ import java.util.Random;
 
 import battlecode.common.Direction;
 import battlecode.common.MapLocation;
+import battlecode.common.UnitType;
 
 public class Globals {
 
@@ -17,7 +18,7 @@ public class Globals {
   //
   static int turnCount = 0;
 
-  public enum GAME_PHASAE {
+  public enum GAME_PHASE{
     early,
     mid,
     late,
@@ -44,4 +45,11 @@ public class Globals {
       Direction.WEST,
       Direction.NORTHWEST,
   };
+
+  /********************** STARTEGY **************************/
+
+  static final UnitType EarlyGameMainUnit = UnitType.SOLDIER;
+  static final UnitType EarlyGameSecondarySecondaryUnit = UnitType.SOLDIER;
+  static final UnitType EarlyGameLastUnit = UnitType.SPLASHER;
+
 }
