@@ -49,6 +49,8 @@ class Soldier extends Globals {
   // TODO: search for enemy towers and call an attack
 
   public static void runSoldier(RobotController rc) throws GameActionException {
+  
+    Utils.updateFriendlyTowers(rc);
 
     switch (state) {
 
