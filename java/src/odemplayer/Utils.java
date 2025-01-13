@@ -1,6 +1,7 @@
 package odemplayer;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
@@ -66,6 +67,54 @@ public class Utils extends Globals {
       }
     }
     return closestLocation;
+  }
+  public static void updateFriendlyTowers(RobotController rc) throws GameActionException {
+    // Search for all nearby robots
+    RobotInfo[] allyRobots = rc.senseNearbyRobots(-1, rc.getTeam());
+    for (RobotInfo ally : allyRobots) {
+      if (!ally.getType().isTowerType())
+        continue;
+
+      MapLocation allyLocation = ally.location;
+
+      RobotInfo knownTowersAllyLocation = knownTowersInfos.stream()
+              .filter(tower -> tower.location == ally.location).findFirst().orElse(null);
+
+      if (knownTowersAllyLocation != null) {
+        if (isSaving) {
+          if (rc.canSendMessage(allyLocation)) {
+            rc.sendMessage(allyLocation, MESSAGE_TYPE.save_chips.ordinal());
+          }
+          isSaving = false;
+        }
+
+        continue;
+      }
+      knownTowersInfos.add(ally);
+    }
+
+  }
+  /*
+    //// message encoders ////
+    there are a bunch of overloading, each may contain a few message types if they require the same arguments.
+    the smallest digit is used for message type.
+    in general, information is read from smallest to largest bit, so you could do:
+    info = msg%10; msg /= 10;
+  */
+
+  public static int encodeMessage(MESSAGE_TYPE type, MapLocation location){  //ask for refill
+    int ret = Arrays.binarySearch(messageTypesIndexes,type);
+
+    switch(type){
+      case MESSAGE_TYPE.buildTowerHere:
+      case MESSAGE_TYPE.askForRefill:
+        int x = location.x, y = location.y;
+        ret += x*10 + y*1000;
+      break;
+    }
+
+    System.out.println("message encoded: " + ret);
+    return ret;
   }
 
 }
