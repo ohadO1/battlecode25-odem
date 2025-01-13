@@ -32,26 +32,17 @@ class Soldier extends Globals {
   //build tower
   static MapInfo ruinDest = null;
 
-  //refill from tower
-  static RobotInfo towerDest = null;
-  static MapLocation refillDest;    //tower to refill paint from
-
   //notifyTower
   static MapLocation notifyDest;    //tower to notify ive found a ruin
 
-  static ArrayList<MapLocation> knownTowersLocations = new ArrayList<>();
-
-  // TODO: refill from tower state
   // TODO: attack state
   // TODO: scout direction state
-  // TODO: run sense towers to, uh, sense towers
-  // TODO: optimize sense towers function below
   // TODO: search for enemy towers and call an attack
 
   public static void runSoldier(RobotController rc) throws GameActionException {
 
     Utils.updateFriendlyTowers(rc);
-
+//    System.out.println("current state: " + state.name());
     switch (state) {
 
       //region roam

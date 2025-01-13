@@ -5,20 +5,19 @@ import java.util.Random;
 
 import battlecode.common.Direction;
 import battlecode.common.RobotInfo;
-import battlecode.common.MapLocation;
 import battlecode.common.UnitType;
 
 public class Globals {
 
   public enum MESSAGE_TYPE {
-    save_chips,
+    saveChips,
     askForRefill,
     buildTowerHere,
     attackTower,
   }
   //in the encoder/decoder, use: messageTypesIndexes.indexOf(type) to get a consistent int. (its an array but you get it)
   public static MESSAGE_TYPE[] messageTypesIndexes = {
-    MESSAGE_TYPE.save_chips,
+    MESSAGE_TYPE.saveChips,
     MESSAGE_TYPE.askForRefill,
     MESSAGE_TYPE.buildTowerHere,
     MESSAGE_TYPE.attackTower,

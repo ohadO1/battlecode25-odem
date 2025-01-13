@@ -50,7 +50,7 @@ public class Utils extends Globals {
    * finds the closest tower (out of the known tower locations)
    * 
    * @param rc                   - RobotController
-   * @param knownTowersLocations - ArrayList<MapLocation>
+   * @param knownTowersInfo - ArrayList<MapLocation>
    * @return closestTowerLocation - MapLocation
    */
   public static MapLocation findClosestTower(ArrayList<RobotInfo> knownTowersInfo, RobotController rc) {
@@ -83,7 +83,7 @@ public class Utils extends Globals {
       if (knownTowersAllyLocation != null) {
         if (isSaving) {
           if (rc.canSendMessage(allyLocation)) {
-            rc.sendMessage(allyLocation, MESSAGE_TYPE.save_chips.ordinal());
+            rc.sendMessage(allyLocation, MESSAGE_TYPE.saveChips.ordinal());
           }
           isSaving = false;
         }

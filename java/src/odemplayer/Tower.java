@@ -22,17 +22,17 @@ public class Tower extends Globals {
       int robotType = rng.nextInt(4);
 
       // build more soldiers
-      if (robotType == 0 || robotType == 1 && rc.canBuildRobot(UnitType.SOLDIER, nextLocation)) {
+      if (robotType <= 1 && rc.canBuildRobot(EarlyGameMainUnit, nextLocation) && rc.senseRobotAtLocation(nextLocation) == null) {
         rc.buildRobot(EarlyGameMainUnit, nextLocation);
         System.out.println("BUILT A SOLDIER");
       }
 
-      else if (robotType == 2 && rc.canBuildRobot(UnitType.SPLASHER, nextLocation)) {
-        rc.buildRobot(UnitType.SPLASHER, nextLocation);
+      else if (robotType == 2 && rc.canBuildRobot(EarlyGameLastUnit, nextLocation) && rc.senseRobotAtLocation(nextLocation) == null) {
+        rc.buildRobot(EarlyGameLastUnit, nextLocation);
         System.out.println("BUILT A SPLASHER");
       }
 
-      else if (robotType == 3 && rc.canBuildRobot(UnitType.MOPPER, nextLocation)) {
+      else if (robotType == 3 && rc.canBuildRobot(EarlyGameSecondarySecondaryUnit, nextLocation) && rc.senseRobotAtLocation(nextLocation) == null) {
         rc.buildRobot(EarlyGameSecondarySecondaryUnit, nextLocation);
         System.out.println("BUILT A MOPPER");
       }
@@ -53,7 +53,7 @@ public class Tower extends Globals {
     for (Message m : messages) {
       System.out.println("Tower received message: '#" + m.getSenderID() + " " + m.getBytes());
 
-      if (m.getBytes() == MESSAGE_TYPE.save_chips.ordinal() && !isSaving) {
+      if (m.getBytes() == MESSAGE_TYPE.saveChips.ordinal() && !isSaving) {
         // TODO: Make more specific
         savingTurns = 50;
         isSaving = true;
