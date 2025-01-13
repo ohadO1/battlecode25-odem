@@ -1,4 +1,4 @@
-package odemplayer;
+package odemplayer_tournament1;
 
 import battlecode.common.*;
 
@@ -6,20 +6,17 @@ public class RobotPlayer extends Globals {
 
   // TODO: handle attacking enemy units
   public static void run(RobotController rc) throws GameActionException {
-
-    UnitType unitType = rc.getType();
-
-    // initializers. will execute in the beginning of the method. use to set roles,
-    // etc
-    switch (unitType) {
-      case MOPPER:
-        Mopper.determineMopperRole(rc);
+    if (rc.getType() == UnitType.MOPPER && rc.getID() % 2 == 0) {
+      System.out.println(rc.getID());
+      // if a mopper is a messanger
+      isMessanger = true;
     }
-
+    
     while (true) {
       turnCount++;
+
       try {
-        switch (unitType) {
+        switch (rc.getType()) {
           case SOLDIER:
             Soldier.runSoldier(rc);
             break;
@@ -30,7 +27,6 @@ public class RobotPlayer extends Globals {
             Splasher.runSplasher(rc);
             break;
 
-          // tower might be too generic, split code by kind of tower
           default:
             Tower.runTower(rc);
             break;
