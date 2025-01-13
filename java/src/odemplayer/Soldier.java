@@ -142,9 +142,6 @@ class Soldier extends Globals {
               state = SOLDIER_STATES.waitForRefill;
             }
 
-
-
-
           }
         break;
         //endregion

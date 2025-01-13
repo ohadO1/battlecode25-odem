@@ -11,8 +11,18 @@ import battlecode.common.UnitType;
 public class Globals {
 
   public enum MESSAGE_TYPE {
-    save_chips
+    save_chips,
+    askForRefill,
+    buildTowerHere,
+    attackTower,
   }
+  //in the encoder/decoder, use: messageTypesIndexes.indexOf(type) to get a consistent int. (its an array but you get it)
+  public static MESSAGE_TYPE[] messageTypesIndexes = {
+    MESSAGE_TYPE.save_chips,
+    MESSAGE_TYPE.askForRefill,
+    MESSAGE_TYPE.buildTowerHere,
+    MESSAGE_TYPE.attackTower,
+  };
 
   // TODO: some of the globals should be more specific (tower or unit scope)
   // TODO: get width and height of the map for further calculations

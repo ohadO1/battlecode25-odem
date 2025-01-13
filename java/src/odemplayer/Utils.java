@@ -1,6 +1,7 @@
 package odemplayer;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
@@ -66,6 +67,29 @@ public class Utils extends Globals {
       }
     }
     return closestLocation;
+  }
+
+  /*
+    //// message encoders ////
+    there are a bunch of overloading, each may contain a few message types if they require the same arguments.
+    the smallest digit is used for message type.
+    in general, information is read from smallest to largest bit, so you could do:
+    info = msg%10; msg /= 10;
+  */
+
+  public static int encodeMessage(MESSAGE_TYPE type, MapLocation location){  //ask for refill
+    int ret = Arrays.binarySearch(messageTypesIndexes,type);
+
+    switch(type){
+      case MESSAGE_TYPE.buildTowerHere:
+      case MESSAGE_TYPE.askForRefill:
+        int x = location.x, y = location.y;
+        ret += x*10 + y*1000;
+      break;
+    }
+
+    System.out.println("message encoded: " + ret);
+    return ret;
   }
 
 }
