@@ -11,20 +11,43 @@ class Soldier extends Globals {
     roam,           //walk randomly
     notifyTower,    //found a ruin im not able to build. walk to notify tower
     buildTower,     //found a ruin im able to build. build it.
-    refillFromTower,//go to a tower to refill paint.
+    waitForRefill,  //wait for a tower to send a mopper for a refill.
     attack,         //found a tower with enough friends to attack it.
   }
 
+  //tasks are like a macro state. they are persistent within states.
+  //a soldier doesn't necessarily have a task at all times.
+  static SOLDIER_TASKS task = null;
+  enum SOLDIER_TASKS{
+    buildTower,
+    attack,
+  }
+
   static SOLDIER_STATES state = SOLDIER_STATES.roam;
+  static SOLDIER_STATES statePrev = state;
+  static boolean stateChanged = false;
+
+  /// state specific vars
+
+  //build tower
   static MapInfo ruinDest = null;
+
+  //refill from tower
+  static RobotInfo towerDest = null;
+  static MapLocation refillDest;    //tower to refill paint from
+
+  //notifyTower
+  static MapLocation notifyDest;    //tower to notify ive found a ruin
+
   static ArrayList<MapLocation> knownTowersLocations = new ArrayList<>();
-  static MapLocation dest;                                //multipurpose var for going to places, used differently in different states.
 
   // TODO: refill from tower state
   // TODO: attack state
   // TODO: scout direction state
   // TODO: run sense towers to, uh, sense towers
   // TODO: optimize sense towers function below
+  // TODO: search for enemy towers and call an attack
+
   public static void runSoldier(RobotController rc) throws GameActionException {
 
     switch (state) {
@@ -45,13 +68,14 @@ class Soldier extends Globals {
           }
         }
 
-        //TODO: search for enemy towers and call an attack
         //if found ruin, decide what to do about it.
         if (ruinDest != null) {
           if (true)  //shouldIBuild(findClosestTower(knownTowersLocations,rc),rc.getPaint())
             state = SOLDIER_STATES.buildTower;
           else
             state = SOLDIER_STATES.notifyTower;
+
+          task = SOLDIER_TASKS.buildTower;
         }
         //if didn't find ruin, wander around.
         else {
@@ -105,39 +129,36 @@ class Soldier extends Globals {
       //region notify tower
         case SOLDIER_STATES.notifyTower:
 
-          dest = Utils.findClosestTower(knownTowersLocations, rc);
-          PathFinder.moveToLocation(rc,dest);
-          if(rc.canSendMessage(dest)) {
-//            rc.sendMessage(dest,encodeMessage(MESSAGE_TYPE.buildTowerHere,ruinDest));
+          notifyDest = Utils.findClosestTower(knownTowersInfos, rc);
+          PathFinder.moveToLocation(rc, notifyDest);
+          if(rc.canSendMessage(notifyDest)) {
+//            rc.sendMessage(dest,encodeMessage(MESSAGE_TYPE.buildTowerHere,notifyDest));
 
-            //if its a paint tower, goto refill paint
-            RobotInfo tower = rc.senseRobotAtLocation(dest);
-            if(tower.getTeam() == rc.getTeam()
-                    && (tower.getType().equals(UnitType.LEVEL_ONE_PAINT_TOWER)
-                      || tower.getType().equals(UnitType.LEVEL_TWO_PAINT_TOWER))
-                      || tower.getType().equals(UnitType.LEVEL_THREE_PAINT_TOWER)) {
-              state = SOLDIER_STATES.refillFromTower;
-            }
-            //else, look for a paint tower to refill from
-            else {
-
-
-
+            if(rc.getPaint()/rc.getType().paintCapacity > SOLDIER_PAINT_FOR_TASK)
+              state = SOLDIER_STATES.buildTower;
+            else{
+              Clock.yield();
+//            rc.sendMessage(dest,encodeMessage(MESSAGE_TYPE.askForRefill,notifyDest));
+              state = SOLDIER_STATES.waitForRefill;
             }
 
-            state = SOLDIER_STATES.buildTower;
+
+
+
           }
         break;
         //endregion
+
     }
 
-
-
+    //states
+    stateChanged = state != statePrev;
+    statePrev = state;
 
   }
 
   //run this every once in a while to sense towers
-  private void senseTowers(RobotController rc){
+  public static void senseTowers(RobotController rc){
 
     ArrayList<UnitType> towerTypes = new ArrayList<>();
     towerTypes.add(UnitType.LEVEL_ONE_PAINT_TOWER);
@@ -152,7 +173,7 @@ class Soldier extends Globals {
 
     for(RobotInfo robot : rc.senseNearbyRobots()){
       if(robot.getTeam() == rc.getTeam() && towerTypes.contains(robot.getType()))
-        knownTowers.add(robot.getLocation());
+        knownTowersInfos.add(robot);
     }
   }
 

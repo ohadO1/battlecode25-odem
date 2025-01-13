@@ -55,5 +55,6 @@ public class Globals {
   static final UnitType EarlyGameMainUnit = UnitType.SOLDIER;
   static final UnitType EarlyGameSecondarySecondaryUnit = UnitType.SOLDIER;
   static final UnitType EarlyGameLastUnit = UnitType.SPLASHER;
+  static final double SOLDIER_PAINT_FOR_TASK = 0.4; //when a soldier fails to refill paint but has above this, he will give up and go back to task.
 
 }
