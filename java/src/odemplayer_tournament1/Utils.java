@@ -1,4 +1,4 @@
-package odemplayer;
+package odemplayer_tournament1;
 
 import java.util.ArrayList;
 
@@ -7,13 +7,11 @@ import battlecode.common.GameActionException;
 import battlecode.common.MapInfo;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
-import battlecode.common.RobotInfo;
 
 //NOTE: document well each function, will help us in later stages of the project
 //
 public class Utils extends Globals {
 
-  // TODO: not efficient enough! fix
   /**
    * method that avoids walls when roaming (no task yet)
    * 
@@ -52,12 +50,11 @@ public class Utils extends Globals {
    * @param knownTowersLocations - ArrayList<MapLocation>
    * @return closestTowerLocation - MapLocation
    */
-  public static MapLocation findClosestTower(ArrayList<RobotInfo> knownTowersInfo, RobotController rc) {
+  public static MapLocation findClosestTower(ArrayList<MapLocation> knownTowersLocations, RobotController rc) {
     int distance = 99999;
     MapLocation closestLocation = null;
 
-    for (RobotInfo knownTower : knownTowersInfos) {
-      MapLocation location = knownTower.getLocation();
+    for (MapLocation location : knownTowersLocations) {
       int foundDistance = location.distanceSquaredTo(rc.getLocation());
       if (distance > foundDistance) {
         distance = foundDistance;

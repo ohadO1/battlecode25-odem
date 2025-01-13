@@ -1,4 +1,4 @@
-package odemplayer;
+package odemplayer_tournament1;
 
 import battlecode.common.*;
 
@@ -7,15 +7,15 @@ public class Tower extends Globals {
   // TODO: too long. improve
   public static void runTower(RobotController rc) throws GameActionException {
 
-    GAME_PHASE current_phase = GAME_PHASE.early;
+    GAME_PHASAE current_phase = GAME_PHASAE.early;
 
     if (savingTurns == 0) {
       isSaving = false;
 
-      // upgrade if able
-      // if (rc.canUpgradeTower(rc.getLocation())) {
-      // rc.upgradeTower(rc.getLocation());
-      // }
+      //upgrade if able
+      if (rc.canUpgradeTower(rc.getLocation())) {
+        rc.upgradeTower(rc.getLocation());
+      }
 
       Direction dir = directions[rng.nextInt(directions.length)];
       MapLocation nextLocation = rc.getLocation().add(dir);
@@ -23,7 +23,7 @@ public class Tower extends Globals {
 
       // build more soldiers
       if (robotType == 0 || robotType == 1 && rc.canBuildRobot(UnitType.SOLDIER, nextLocation)) {
-        rc.buildRobot(EarlyGameMainUnit, nextLocation);
+        rc.buildRobot(UnitType.SOLDIER, nextLocation);
         System.out.println("BUILT A SOLDIER");
       }
 
@@ -33,7 +33,7 @@ public class Tower extends Globals {
       }
 
       else if (robotType == 3 && rc.canBuildRobot(UnitType.MOPPER, nextLocation)) {
-        rc.buildRobot(EarlyGameSecondarySecondaryUnit, nextLocation);
+        rc.buildRobot(UnitType.MOPPER, nextLocation);
         System.out.println("BUILT A MOPPER");
       }
     } else {
@@ -53,7 +53,7 @@ public class Tower extends Globals {
     for (Message m : messages) {
       System.out.println("Tower received message: '#" + m.getSenderID() + " " + m.getBytes());
 
-      if (m.getBytes() == MESSAGE_TYPE.save_chips.ordinal() && !isSaving) {
+      if (m.getBytes() == MessageType.SAVE_CHIPS.ordinal() && !isSaving) {
         // TODO: Make more specific
         savingTurns = 50;
         isSaving = true;
