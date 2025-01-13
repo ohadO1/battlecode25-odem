@@ -53,7 +53,7 @@ public class Tower extends Globals {
     for (Message m : messages) {
       System.out.println("Tower received message: '#" + m.getSenderID() + " " + m.getBytes());
 
-      if (m.getBytes() == MessageType.SAVE_CHIPS.ordinal() && !isSaving) {
+      if (m.getBytes() == MESSAGE_TYPE.save_chips.ordinal() && !isSaving) {
         // TODO: Make more specific
         savingTurns = 50;
         isSaving = true;

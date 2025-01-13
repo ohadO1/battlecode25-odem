@@ -12,6 +12,7 @@ import battlecode.common.RobotController;
 //
 public class Utils extends Globals {
 
+  // TODO: not efficient enough! fix
   /**
    * method that avoids walls when roaming (no task yet)
    * 

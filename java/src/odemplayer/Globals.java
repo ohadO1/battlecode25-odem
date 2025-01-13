@@ -9,8 +9,8 @@ import battlecode.common.UnitType;
 
 public class Globals {
 
-  public enum MessageType {
-    SAVE_CHIPS
+  public enum MESSAGE_TYPE {
+    save_chips
   }
 
   // TODO: some of the globals should be more specific (tower or unit scope)
@@ -23,9 +23,6 @@ public class Globals {
     mid,
     late,
   }
-
-  // messanger:
-  static boolean isMessanger = false;
 
   static ArrayList<MapLocation> knownTowers = new ArrayList<>();
 

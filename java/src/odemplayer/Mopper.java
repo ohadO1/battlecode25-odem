@@ -9,42 +9,51 @@ import battlecode.common.RobotInfo;
 
 public class Mopper extends Globals {
 
+  public enum MOPPER_ROLES {
+    messenger,
+    normal
+  }
+
+  static MOPPER_ROLES role = MOPPER_ROLES.normal;
+
   public static void runMopper(RobotController rc) throws GameActionException {
-    if (isMessanger == true) {
-      System.out.println("IN IF STATEMENT, MARKING");
-      rc.setIndicatorDot(rc.getLocation(), 0, 255, 0);
+    switch (role) {
+      case messenger:
+        if (isSaving && knownTowers.size() > 0) {
+          // TODO: move to utils
+          MapLocation destination = Utils.findClosestTower(knownTowers, rc);
+
+          Direction dir = rc.getLocation().directionTo(destination);
+          // TODO: what happens if mopper is facing a wall?
+          if (rc.canMove(dir)) {
+            rc.move(dir);
+          }
+        }
+        // NOTE: for debugging, remove when submitting
+        rc.setIndicatorDot(rc.getLocation(), 0, 255, 0);
+
+        updateFriendlyTowers(rc);
+        checkNearbyRuins(rc);
+        // tbd
+
+      default:
     }
 
-    if (isMessanger && isSaving && knownTowers.size() > 0) {
-      // TODO: move to utils
-      MapLocation destination = Utils.findClosestTower(knownTowers, rc);
-
-      Direction dir = rc.getLocation().directionTo(destination);
-      // TODO: what happens if mopper is facing a wall?
-      if (rc.canMove(dir)) {
-        rc.move(dir);
-      }
-    }
-
+    // NOTE: this code will execute on every role assigned to the unit. this code
+    // needs to improve, no logic involved in roaming or attacking
     MapLocation nextLoc = Utils.roamGracefullyf(rc);
 
+    // how do we attack?
     for (Direction tryMopDirection : directions) {
       if (rc.canMopSwing(tryMopDirection)) {
         rc.mopSwing(tryMopDirection);
       }
     }
 
-    // TODO: attack by radius
     if (rc.canAttack(nextLoc)) {
       rc.attack(nextLoc);
     }
 
-    // if we are a messanger, we also want to update friendly towers and check for
-    // ruins
-    if (isMessanger) {
-      updateFriendlyTowers(rc);
-      checkNearbyRuins(rc);
-    }
   }
 
   public static void updateFriendlyTowers(RobotController rc) throws GameActionException {
@@ -58,7 +67,7 @@ public class Mopper extends Globals {
       if (knownTowers.contains(allyLocation)) {
         if (isSaving) {
           if (rc.canSendMessage(allyLocation)) {
-            rc.sendMessage(allyLocation, MessageType.SAVE_CHIPS.ordinal());
+            rc.sendMessage(allyLocation, MESSAGE_TYPE.save_chips.ordinal());
           }
           isSaving = false;
         }
@@ -92,6 +101,16 @@ public class Mopper extends Globals {
 
       // check if there is a ruin but there is no robot on top of the ruin (tower)
       isSaving = true;
+    }
+  }
+
+  public static void determineMopperRole(RobotController rc) {
+    int id = rc.getID();
+    switch (id % 2) {
+      case 0:
+        role = MOPPER_ROLES.messenger;
+      default:
+        role = MOPPER_ROLES.normal;
     }
   }
 
