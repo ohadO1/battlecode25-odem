@@ -108,7 +108,7 @@ class Soldier extends Globals {
           dest = Utils.findClosestTower(knownTowersLocations, rc);
           PathFinder.moveToLocation(rc,dest);
           if(rc.canSendMessage(dest)) {
-            rc.sendMessage(dest,encodeMessage(MESSAGE_TYPE.buildTowerHere,ruinDest));
+//            rc.sendMessage(dest,encodeMessage(MESSAGE_TYPE.buildTowerHere,ruinDest));
 
             //if its a paint tower, goto refill paint
             RobotInfo tower = rc.senseRobotAtLocation(dest);
