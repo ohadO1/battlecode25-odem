@@ -133,10 +133,8 @@ public class Mopper extends Globals {
    */
   public static void tranferPaintToLocation(RobotController rc,
       MapLocation targetLocation, int amount) throws GameActionException {
-    MapLocation currentLocation = rc.getLocation();
 
-    if (currentLocation.distanceSquaredTo(targetLocation) <= Math.sqrt(2) &&
-        rc.canTransferPaint(targetLocation, amount)) {
+    if (rc.canTransferPaint(targetLocation, amount)) {
       rc.transferPaint(targetLocation, amount);
       return;
     }
