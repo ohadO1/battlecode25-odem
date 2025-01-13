@@ -9,12 +9,20 @@ import battlecode.common.RobotInfo;
 
 public class Mopper extends Globals {
 
-  public enum MOPPER_ROLES {
+  private enum MOPPER_ROLES {
     messenger,
     normal
   }
 
-  static MOPPER_ROLES role = MOPPER_ROLES.normal;
+  private enum MOPPER_STATE {
+    transfer_paint,
+    notify_tower,
+    normal
+  }
+
+  private static MOPPER_ROLES role = MOPPER_ROLES.normal;
+
+  private static MOPPER_STATE state = MOPPER_STATE.normal;
 
   public static void runMopper(RobotController rc) throws GameActionException {
     switch (role) {
@@ -92,4 +100,22 @@ public class Mopper extends Globals {
     }
   }
 
+  /**
+   * @param - how much paint to take or give to the unit (positive to give,
+   *          negative to take)
+   * @param - targetLocation
+   * @return void
+   */
+  public static void tranferPaintToLocation(RobotController rc,
+      MapLocation targetLocation, int amount) throws GameActionException {
+    MapLocation currentLocation = rc.getLocation();
+
+    if (currentLocation.distanceSquaredTo(targetLocation) <= Math.sqrt(2) &&
+        rc.canTransferPaint(targetLocation, amount)) {
+      rc.transferPaint(targetLocation, amount);
+      return;
+    }
+
+    PathFinder.moveToLocation(rc, targetLocation);
+  }
 }
