@@ -11,36 +11,33 @@ public class Mopper extends Globals {
 
   private enum MOPPER_ROLES {
     messenger,
+    refiller,
     normal
   }
 
   private enum MOPPER_STATE {
-    transfer_paint,
-    notify_tower,
-    normal
+    transferPaint,
+    notifyTower,
+    roam,
+    saving
   }
 
   private static MOPPER_ROLES role = MOPPER_ROLES.normal;
 
-  private static MOPPER_STATE state = MOPPER_STATE.normal;
+  private static MOPPER_STATE state = MOPPER_STATE.roam;
 
   public static void runMopper(RobotController rc) throws GameActionException {
+
     switch (role) {
       case messenger:
-        if (isSaving && knownTowersInfos.size() > 0) {
-          // TODO: move to utils
+        if (state == MOPPER_STATE.roam && knownTowersInfos.size() > 0) {
           MapLocation destination = Utils.findClosestTower(knownTowersInfos, rc);
-
-          Direction dir = rc.getLocation().directionTo(destination);
-          // TODO: what happens if mopper is facing a wall?
-          if (rc.canMove(dir)) {
-            rc.move(dir);
-          }
+          PathFinder.moveToLocation(rc, destination);
+          Utils.updateFriendlyTowers(rc);
         }
         // NOTE: for debugging, remove when submitting
         rc.setIndicatorDot(rc.getLocation(), 0, 255, 0);
 
-        Utils.updateFriendlyTowers(rc);
         checkNearbyRuins(rc);
         // tbd
 
@@ -64,8 +61,6 @@ public class Mopper extends Globals {
 
   }
 
-
-
   public static void checkNearbyRuins(RobotController rc) throws GameActionException {
     MapInfo[] nearbyTiles = rc.senseNearbyMapInfos();
 
@@ -86,7 +81,8 @@ public class Mopper extends Globals {
       }
 
       // check if there is a ruin but there is no robot on top of the ruin (tower)
-      isSaving = true;
+      state = MOPPER_STATE.saving;
+      // isSaving = true;
     }
   }
 
@@ -94,9 +90,9 @@ public class Mopper extends Globals {
     int id = rc.getID();
     switch (id % 2) {
       case 0:
-        role = MOPPER_ROLES.messenger;
+        Mopper.role = MOPPER_ROLES.messenger;
       default:
-        role = MOPPER_ROLES.normal;
+        Mopper.role = MOPPER_ROLES.normal;
     }
   }
 
@@ -108,10 +104,8 @@ public class Mopper extends Globals {
    */
   public static void tranferPaintToLocation(RobotController rc,
       MapLocation targetLocation, int amount) throws GameActionException {
-    MapLocation currentLocation = rc.getLocation();
 
-    if (currentLocation.distanceSquaredTo(targetLocation) <= Math.sqrt(2) &&
-        rc.canTransferPaint(targetLocation, amount)) {
+    if (rc.canTransferPaint(targetLocation, amount)) {
       rc.transferPaint(targetLocation, amount);
       return;
     }
