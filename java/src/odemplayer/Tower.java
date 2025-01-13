@@ -7,15 +7,15 @@ public class Tower extends Globals {
   // TODO: too long. improve
   public static void runTower(RobotController rc) throws GameActionException {
 
-    GAME_PHASAE current_phase = GAME_PHASAE.early;
+    GAME_PHASE current_phase = GAME_PHASE.early;
 
     if (savingTurns == 0) {
       isSaving = false;
 
-      //upgrade if able
-      if (rc.canUpgradeTower(rc.getLocation())) {
-        rc.upgradeTower(rc.getLocation());
-      }
+      // upgrade if able
+      // if (rc.canUpgradeTower(rc.getLocation())) {
+      // rc.upgradeTower(rc.getLocation());
+      // }
 
       Direction dir = directions[rng.nextInt(directions.length)];
       MapLocation nextLocation = rc.getLocation().add(dir);
@@ -23,7 +23,7 @@ public class Tower extends Globals {
 
       // build more soldiers
       if (robotType == 0 || robotType == 1 && rc.canBuildRobot(UnitType.SOLDIER, nextLocation)) {
-        rc.buildRobot(UnitType.SOLDIER, nextLocation);
+        rc.buildRobot(EarlyGameMainUnit, nextLocation);
         System.out.println("BUILT A SOLDIER");
       }
 
@@ -33,7 +33,7 @@ public class Tower extends Globals {
       }
 
       else if (robotType == 3 && rc.canBuildRobot(UnitType.MOPPER, nextLocation)) {
-        rc.buildRobot(UnitType.MOPPER, nextLocation);
+        rc.buildRobot(EarlyGameSecondarySecondaryUnit, nextLocation);
         System.out.println("BUILT A MOPPER");
       }
     } else {
