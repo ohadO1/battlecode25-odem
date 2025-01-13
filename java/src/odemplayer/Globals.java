@@ -23,16 +23,6 @@ public class Globals {
     late,
   }
 
-  // messanger:
-  //
-  public enum UNIT_ROLES {
-    messenger,
-    scout
-  }
-
-  static UNIT_ROLES unitRole = null;
-
-
   static ArrayList<MapLocation> knownTowers = new ArrayList<>();
 
   static boolean isSaving = false;

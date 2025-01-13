@@ -6,16 +6,20 @@ public class RobotPlayer extends Globals {
 
   // TODO: handle attacking enemy units
   public static void run(RobotController rc) throws GameActionException {
-    if (rc.getType() == UnitType.MOPPER && rc.getID() % 2 == 0) {
-      // if a mopper is a messanger
-      unitRole = UNIT_ROLES.messenger;
+
+    UnitType unitType = rc.getType();
+
+    // initializers. will execute in the beginning of the method. use to set roles,
+    // etc
+    switch (unitType) {
+      case MOPPER:
+        Mopper.determineMopperRole(rc);
     }
 
     while (true) {
       turnCount++;
-
       try {
-        switch (rc.getType()) {
+        switch (unitType) {
           case SOLDIER:
             Soldier.runSoldier(rc);
             break;
@@ -26,6 +30,7 @@ public class RobotPlayer extends Globals {
             Splasher.runSplasher(rc);
             break;
 
+          // tower might be too generic, split code by kind of tower
           default:
             Tower.runTower(rc);
             break;

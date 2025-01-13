@@ -9,8 +9,15 @@ import battlecode.common.RobotInfo;
 
 public class Mopper extends Globals {
 
+  public enum MOPPER_ROLES {
+    messenger,
+    normal
+  }
+
+  static MOPPER_ROLES role = MOPPER_ROLES.normal;
+
   public static void runMopper(RobotController rc) throws GameActionException {
-    switch (unitRole) {
+    switch (role) {
       case messenger:
         if (isSaving && knownTowers.size() > 0) {
           // TODO: move to utils
@@ -28,13 +35,12 @@ public class Mopper extends Globals {
         updateFriendlyTowers(rc);
         checkNearbyRuins(rc);
         // tbd
-      case scout:
 
       default:
     }
 
     // NOTE: this code will execute on every role assigned to the unit. this code
-    // needs to improve, no logic involved in roaming and attacking
+    // needs to improve, no logic involved in roaming or attacking
     MapLocation nextLoc = Utils.roamGracefullyf(rc);
 
     // how do we attack?
@@ -95,6 +101,16 @@ public class Mopper extends Globals {
 
       // check if there is a ruin but there is no robot on top of the ruin (tower)
       isSaving = true;
+    }
+  }
+
+  public static void determineMopperRole(RobotController rc) {
+    int id = rc.getID();
+    switch (id % 2) {
+      case 0:
+        role = MOPPER_ROLES.messenger;
+      default:
+        role = MOPPER_ROLES.normal;
     }
   }
 
