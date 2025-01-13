@@ -42,7 +42,7 @@ class Soldier extends Globals {
   public static void runSoldier(RobotController rc) throws GameActionException {
 
     Utils.updateFriendlyTowers(rc);
-//    System.out.println("current state: " + state.name());
+
     switch (state) {
 
       //region roam
@@ -52,7 +52,7 @@ class Soldier extends Globals {
         MapInfo[] nearbyTiles = rc.senseNearbyMapInfos();
         int currentDistance = 99999;
         for (MapInfo tile : nearbyTiles) {
-          if (tile.hasRuin()) {
+          if (tile.hasRuin() && rc.senseRobotAtLocation(tile.getMapLocation()) == null) {
             int distance = tile.getMapLocation().distanceSquaredTo(rc.getLocation());
             if (distance < currentDistance) {
               ruinDest = tile;
@@ -63,7 +63,7 @@ class Soldier extends Globals {
 
         //if found ruin, decide what to do about it.
         if (ruinDest != null) {
-          if (true)  //shouldIBuild(findClosestTower(knownTowersLocations,rc),rc.getPaint())
+          if (false)  //shouldIBuild(findClosestTower(knownTowersLocations,rc),rc.getPaint())
             state = SOLDIER_STATES.buildTower;
           else
             state = SOLDIER_STATES.notifyTower;
@@ -86,6 +86,8 @@ class Soldier extends Globals {
       //endregion
       //region build tower
       case SOLDIER_STATES.buildTower:
+
+        if(stateChanged) System.out.println("starting to build tower at: " + ruinDest.getMapLocation());
 
         //go to the ruin
         MapLocation targetLocation = ruinDest.getMapLocation();
@@ -125,13 +127,13 @@ class Soldier extends Globals {
           notifyDest = Utils.findClosestTower(knownTowersInfos, rc);
           PathFinder.moveToLocation(rc, notifyDest);
           if(rc.canSendMessage(notifyDest)) {
-//            rc.sendMessage(dest,encodeMessage(MESSAGE_TYPE.buildTowerHere,notifyDest));
+            rc.sendMessage(notifyDest,Utils.encodeMessage(MESSAGE_TYPE.buildTowerHere,notifyDest));
 
             if(rc.getPaint()/rc.getType().paintCapacity > SOLDIER_PAINT_FOR_TASK)
               state = SOLDIER_STATES.buildTower;
             else{
               Clock.yield();
-//            rc.sendMessage(dest,encodeMessage(MESSAGE_TYPE.askForRefill,notifyDest));
+              rc.sendMessage(notifyDest,Utils.encodeMessage(MESSAGE_TYPE.askForRefill,notifyDest));
               state = SOLDIER_STATES.waitForRefill;
             }
 
@@ -144,6 +146,7 @@ class Soldier extends Globals {
     //states
     stateChanged = state != statePrev;
     statePrev = state;
+    if(stateChanged) System.out.println("state changed: " + state.name());
 
   }
 
