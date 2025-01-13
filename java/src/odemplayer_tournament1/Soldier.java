@@ -1,4 +1,4 @@
-package odemplayer;
+package odemplayer_tournament1;
 
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;

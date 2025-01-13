@@ -1,4 +1,4 @@
-package odemplayer;
+package odemplayer_tournament1;
 
 import java.util.ArrayList;
 import java.util.Random;
