@@ -114,7 +114,23 @@ public class Utils extends Globals {
     }
 
     System.out.println("message encoded: " + ret);
+
     return ret;
   }
+  public static int encodeMessage(MESSAGE_TYPE type, int amount){  //ask for refill
+    int ret = type.ordinal();
+
+    switch(type){
+      case MESSAGE_TYPE.saveChips:
+        ret += amount*10;
+        break;
+    }
+
+    System.out.println("message encoded: " + ret);
+
+    return ret;
+  }
+
+
 
 }

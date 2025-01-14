@@ -57,6 +57,7 @@ class Soldier extends Globals {
             if (distance < currentDistance) {
               ruinDest = tile;
               currentDistance = distance;
+              System.out.println("found ruin at: " + ruinDest.getMapLocation() + ", robot at location: " + rc.senseRobotAtLocation(tile.getMapLocation()));
             }
           }
         }
@@ -106,9 +107,17 @@ class Soldier extends Globals {
         boolean attacked = false;
         MapInfo[] patternTiles = rc.senseNearbyMapInfos(targetLocation, 8);
         for (int i = 0; i < patternTiles.length && !attacked; i++) {
-          if (patternTiles[i].getMark() != patternTiles[i].getPaint() && patternTiles[i].getMark() != PaintType.EMPTY && rc.canAttack(patternTiles[i].getMapLocation())) {
-            attacked = true;
-            rc.attack(patternTiles[i].getMapLocation(), patternTiles[i].getMark() == PaintType.ALLY_SECONDARY);
+          if (patternTiles[i].getMark() != patternTiles[i].getPaint() && patternTiles[i].getMark() != PaintType.EMPTY) {
+
+            //found a spot to paint. attack it
+            if(rc.canAttack(patternTiles[i].getMapLocation())) {
+              attacked = true;
+              rc.attack(patternTiles[i].getMapLocation(), patternTiles[i].getMark() == PaintType.ALLY_SECONDARY);
+            }
+            //else, go there in order to reach.
+            else {
+              PathFinder.moveToLocation(rc,patternTiles[i].getMapLocation());
+            }
           }
         }
 
@@ -124,8 +133,14 @@ class Soldier extends Globals {
       //region notify tower
         case SOLDIER_STATES.notifyTower:
 
-          notifyDest = Utils.findClosestTower(knownTowersInfos, rc);
+          //find dest
+          if(stateChanged)
+            notifyDest = Utils.findClosestTower(knownTowersInfos, rc);
+
+          //goto dest
           PathFinder.moveToLocation(rc, notifyDest);
+
+          //reach dest, send message.
           if(rc.canSendMessage(notifyDest)) {
             rc.sendMessage(notifyDest,Utils.encodeMessage(MESSAGE_TYPE.buildTowerHere,notifyDest));
 
