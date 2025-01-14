@@ -16,12 +16,14 @@ public class Globals {
     buildTowerHere,
     attackTower,
   }
-  //in the encoder/decoder, use: messageTypesIndexes.indexOf(type) to get a consistent int. (its an array but you get it)
+
+  // in the encoder/decoder, use: messageTypesIndexes.indexOf(type) to get a
+  // consistent int. (its an array but you get it)
   public static MESSAGE_TYPE[] messageTypesIndexes = {
-    MESSAGE_TYPE.save_chips,
-    MESSAGE_TYPE.askForRefill,
-    MESSAGE_TYPE.buildTowerHere,
-    MESSAGE_TYPE.attackTower,
+      MESSAGE_TYPE.save_chips,
+      MESSAGE_TYPE.askForRefill,
+      MESSAGE_TYPE.buildTowerHere,
+      MESSAGE_TYPE.attackTower,
   };
 
   // TODO: some of the globals should be more specific (tower or unit scope)
@@ -39,9 +41,6 @@ public class Globals {
   static boolean isMessanger = false;
 
   static ArrayList<RobotInfo> knownTowersInfos = new ArrayList<>();
-
-  static boolean isSaving = false;
-  //
 
   // tower
   static int savingTurns = 0;
@@ -62,9 +61,10 @@ public class Globals {
 
   /********************** STARTEGY **************************/
 
-  static final UnitType EarlyGameMainUnit = UnitType.SOLDIER;
-  static final UnitType EarlyGameSecondarySecondaryUnit = UnitType.SOLDIER;
-  static final UnitType EarlyGameLastUnit = UnitType.SPLASHER;
-  static final double SOLDIER_PAINT_FOR_TASK = 0.4; //when a soldier fails to refill paint but has above this, he will give up and go back to task.
+  static final UnitType EARLY_GAME_MAIN_UNIT = UnitType.SOLDIER;
+  static final UnitType EARLY_GAME_SECONDARY_UNIT = UnitType.SOLDIER;
+  static final UnitType EARLY_GAME_LAST_UNIT = UnitType.SPLASHER;
+  static final double SOLDIER_PAINT_FOR_TASK = 0.4; // when a soldier fails to refill paint but has above this, he will
+  static final int PAINT_TOWER_SAVING_TURNS = 50;
 
 }

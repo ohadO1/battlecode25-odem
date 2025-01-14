@@ -22,7 +22,7 @@ public class PathFinder extends Globals {
    * @param a source unit maplocation - MapLocation
    * @param b target unit maplocation - MapLocation
    */
-  public static HashSet<MapLocation> createLine(MapLocation a, MapLocation b) {
+  private static HashSet<MapLocation> createLine(MapLocation a, MapLocation b) {
     HashSet<MapLocation> locs = new HashSet<>();
 
     int x = a.x, y = a.y;
