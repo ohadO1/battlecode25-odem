@@ -40,7 +40,7 @@ public class Mopper extends Globals {
         // NOTE: for debugging, remove when submitting
         rc.setIndicatorDot(rc.getLocation(), 0, 255, 0);
 
-        updateFriendlyTowers(rc);
+        Utils.updateFriendlyTowers(rc);
         checkNearbyRuins(rc);
         // tbd
 
@@ -64,32 +64,7 @@ public class Mopper extends Globals {
 
   }
 
-  public static void updateFriendlyTowers(RobotController rc) throws GameActionException {
-    // Search for all nearby robots
-    RobotInfo[] allyRobots = rc.senseNearbyRobots(-1, rc.getTeam());
-    for (RobotInfo ally : allyRobots) {
-      if (!ally.getType().isTowerType())
-        continue;
 
-      MapLocation allyLocation = ally.location;
-
-      RobotInfo knownTowersAllyLocation = knownTowersInfos.stream()
-          .filter(tower -> tower.location == ally.location).findFirst().orElse(null);
-
-      if (knownTowersAllyLocation != null) {
-        if (isSaving) {
-          if (rc.canSendMessage(allyLocation)) {
-            rc.sendMessage(allyLocation, MESSAGE_TYPE.save_chips.ordinal());
-          }
-          isSaving = false;
-        }
-
-        continue;
-      }
-      knownTowersInfos.add(ally);
-    }
-
-  }
 
   public static void checkNearbyRuins(RobotController rc) throws GameActionException {
     MapInfo[] nearbyTiles = rc.senseNearbyMapInfos();
