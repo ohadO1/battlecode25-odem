@@ -37,6 +37,7 @@ public class Tower extends Globals {
           rc.buildRobot(EARLY_GAME_SECONDARY_UNIT, nextLocation);
           System.out.println("BUILT A MOPPER");
         }
+        break;
 
       case TOWER_STATE.saving:
         if (savingTurns == 0) {
@@ -45,6 +46,7 @@ public class Tower extends Globals {
         }
         savingTurns--;
         rc.setIndicatorString("Saving For " + savingTurns + "More Turns");
+        break;
     }
 
     // TODO: change attacks

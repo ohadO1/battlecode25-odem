@@ -1,5 +1,9 @@
 package odemplayer;
 
+import java.util.ArrayList;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapInfo;
@@ -28,26 +32,37 @@ public class Mopper extends Globals {
 
   public static void runMopper(RobotController rc) throws GameActionException {
 
-    switch (role) {
-      case messenger:
-        if (state == MOPPER_STATE.roam && knownTowersInfos.size() > 0) {
+    // TODO: add a role that will support soldiers and refill them from tower
+    // contantly
+    //
+    switch (state) {
+      case roam:
+        Utils.roamGracefullyf(rc);
+        // find out more about attcks
+        // mopperAttack(rc, nextLoc);
+        if (checkNearbyRuins(rc) && knownTowersInfos.size() > 0) {
+          state = MOPPER_STATE.notifyTower;
           MapLocation destination = Utils.findClosestTower(knownTowersInfos, rc);
           PathFinder.moveToLocation(rc, destination);
-          Utils.updateFriendlyTowers(rc);
         }
-        // NOTE: for debugging, remove when submitting
+        break;
+      // case messenger:
+      case saving:
+        MapLocation destination = Utils.findClosestTower(knownTowersInfos, rc);
+        PathFinder.moveToLocation(rc, destination);
+        boolean didUpdateTowerToSave = Utils.updateFriendlyTowers(rc);
+        // // NOTE: for debugging, remove when submitting
         rc.setIndicatorDot(rc.getLocation(), 0, 255, 0);
-
-        checkNearbyRuins(rc);
-        // tbd
+        if (didUpdateTowerToSave) {
+          state = MOPPER_STATE.notifyTower;
+        }
 
       default:
     }
+  }
 
-    // NOTE: this code will execute on every role assigned to the unit. this code
-    // needs to improve, no logic involved in roaming or attacking
-    MapLocation nextLoc = Utils.roamGracefullyf(rc);
-
+  // TODO: change it
+  public static void mopperAttack(RobotController rc, MapLocation nextLoc) throws GameActionException {
     // how do we attack?
     for (Direction tryMopDirection : directions) {
       if (rc.canMopSwing(tryMopDirection)) {
@@ -61,7 +76,7 @@ public class Mopper extends Globals {
 
   }
 
-  public static void checkNearbyRuins(RobotController rc) throws GameActionException {
+  public static boolean checkNearbyRuins(RobotController rc) throws GameActionException {
     MapInfo[] nearbyTiles = rc.senseNearbyMapInfos();
 
     for (MapInfo tile : nearbyTiles) {
@@ -80,10 +95,10 @@ public class Mopper extends Globals {
         continue;
       }
 
-      // check if there is a ruin but there is no robot on top of the ruin (tower)
-      state = MOPPER_STATE.saving;
-      // isSaving = true;
+      // found not occupied ruin
+      return true;
     }
+    return false;
   }
 
   public static void determineMopperRole(RobotController rc) {
@@ -112,4 +127,5 @@ public class Mopper extends Globals {
 
     PathFinder.moveToLocation(rc, targetLocation);
   }
+
 }
