@@ -1,5 +1,9 @@
 package odemplayer;
 
+import java.util.ArrayList;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapInfo;
@@ -33,13 +37,13 @@ public class Mopper extends Globals {
     //
     switch (state) {
       case roam:
-        MapLocation nextLoc = Utils.roamGracefullyf(rc);
-        checkNearbyRuins(rc);
-        mopperAttack(rc, nextLoc);
-        if (knownTowersInfos.size() > 0) {
+        Utils.roamGracefullyf(rc);
+        // find out more about attcks
+        // mopperAttack(rc, nextLoc);
+        if (checkNearbyRuins(rc) && knownTowersInfos.size() > 0) {
+          state = MOPPER_STATE.notifyTower;
           MapLocation destination = Utils.findClosestTower(knownTowersInfos, rc);
           PathFinder.moveToLocation(rc, destination);
-          state = MOPPER_STATE.notifyTower;
         }
         break;
       // case messenger:
@@ -72,7 +76,7 @@ public class Mopper extends Globals {
 
   }
 
-  public static void checkNearbyRuins(RobotController rc) throws GameActionException {
+  public static boolean checkNearbyRuins(RobotController rc) throws GameActionException {
     MapInfo[] nearbyTiles = rc.senseNearbyMapInfos();
 
     for (MapInfo tile : nearbyTiles) {
@@ -91,10 +95,10 @@ public class Mopper extends Globals {
         continue;
       }
 
-      // check if there is a ruin but there is no robot on top of the ruin (tower)
-      state = MOPPER_STATE.notifyTower;
-      // isSaving = true;
+      // found not occupied ruin
+      return true;
     }
+    return false;
   }
 
   public static void determineMopperRole(RobotController rc) {
@@ -123,4 +127,5 @@ public class Mopper extends Globals {
 
     PathFinder.moveToLocation(rc, targetLocation);
   }
+
 }

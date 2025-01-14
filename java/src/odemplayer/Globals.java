@@ -5,10 +5,22 @@ import java.util.Random;
 
 import battlecode.common.Direction;
 import battlecode.common.RobotInfo;
-import battlecode.common.MapLocation;
 import battlecode.common.UnitType;
 
 public class Globals {
+
+  /********** Unit Names *********/
+
+  public static UnitType[] PAINT_TOWER_NAMES = { UnitType.LEVEL_THREE_PAINT_TOWER, UnitType.LEVEL_TWO_PAINT_TOWER,
+      UnitType.LEVEL_THREE_PAINT_TOWER };
+
+  public static UnitType[] MONEY_TOWER_NAMES = { UnitType.LEVEL_ONE_MONEY_TOWER, UnitType.LEVEL_TWO_MONEY_TOWER,
+      UnitType.LEVEL_THREE_MONEY_TOWER };
+
+  public static UnitType[] DEFENSE_TOWER_NAMES = { UnitType.LEVEL_TWO_DEFENSE_TOWER, UnitType.LEVEL_ONE_DEFENSE_TOWER,
+      UnitType.LEVEL_THREE_PAINT_TOWER };
+
+  /********************************/
 
   public enum MESSAGE_TYPE {
     save_chips,
