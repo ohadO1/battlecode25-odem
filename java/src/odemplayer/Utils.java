@@ -3,18 +3,14 @@ package odemplayer;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import battlecode.common.Direction;
-import battlecode.common.GameActionException;
-import battlecode.common.MapInfo;
-import battlecode.common.MapLocation;
-import battlecode.common.RobotController;
-import battlecode.common.RobotInfo;
+import battlecode.common.*;
 
 //NOTE: document well each function, will help us in later stages of the project
 //
 public class Utils extends Globals {
 
   // TODO: not efficient enough! fix
+  // TODO: add actual logic in WhatShouldIbuild, important function.
   /**
    * method that avoids walls when roaming (no task yet)
    * 
@@ -94,6 +90,17 @@ public class Utils extends Globals {
     }
 
   }
+
+  //decision making functions
+  public static UnitType WhatShouldIBuild(RobotController rc, MapLocation location){
+
+    UnitType choice = DEFUALT_TOWER_TO_BUILD;
+    if(rc.canBuildRobot(choice,location))
+      return choice;
+
+    else return null;
+  }
+
   /*
     //// message encoders ////
     there are a bunch of overloading, each may contain a few message types if they require the same arguments.

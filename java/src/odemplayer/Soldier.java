@@ -35,6 +35,7 @@ class Soldier extends Globals {
   //notifyTower
   static MapLocation notifyDest;    //tower to notify ive found a ruin
 
+  // TODO: ask tower to save money
   // TODO: attack state
   // TODO: scout direction state
   // TODO: search for enemy towers and call an attack
@@ -122,7 +123,8 @@ class Soldier extends Globals {
         }
 
         //complete tower building
-        UnitType towerToBuild = null; //whatShouldIBuild(knownTowers,rc.getPaint(),targetLocation);
+        UnitType towerToBuild = Utils.WhatShouldIBuild(rc,targetLocation);
+        System.out.println("chose type: " + towerToBuild);
         if (towerToBuild != null) {
           rc.completeTowerPattern(towerToBuild, targetLocation);
           state = SOLDIER_STATES.roam;
