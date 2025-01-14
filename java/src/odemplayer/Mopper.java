@@ -28,26 +28,37 @@ public class Mopper extends Globals {
 
   public static void runMopper(RobotController rc) throws GameActionException {
 
-    switch (role) {
-      case messenger:
-        if (state == MOPPER_STATE.roam && knownTowersInfos.size() > 0) {
+    // TODO: add a role that will support soldiers and refill them from tower
+    // contantly
+    //
+    switch (state) {
+      case roam:
+        MapLocation nextLoc = Utils.roamGracefullyf(rc);
+        checkNearbyRuins(rc);
+        mopperAttack(rc, nextLoc);
+        if (knownTowersInfos.size() > 0) {
           MapLocation destination = Utils.findClosestTower(knownTowersInfos, rc);
           PathFinder.moveToLocation(rc, destination);
-          Utils.updateFriendlyTowers(rc);
+          state = MOPPER_STATE.notifyTower;
         }
-        // NOTE: for debugging, remove when submitting
+        break;
+      // case messenger:
+      case saving:
+        MapLocation destination = Utils.findClosestTower(knownTowersInfos, rc);
+        PathFinder.moveToLocation(rc, destination);
+        boolean didUpdateTowerToSave = Utils.updateFriendlyTowers(rc);
+        // // NOTE: for debugging, remove when submitting
         rc.setIndicatorDot(rc.getLocation(), 0, 255, 0);
-
-        checkNearbyRuins(rc);
-        // tbd
+        if (didUpdateTowerToSave) {
+          state = MOPPER_STATE.notifyTower;
+        }
 
       default:
     }
+  }
 
-    // NOTE: this code will execute on every role assigned to the unit. this code
-    // needs to improve, no logic involved in roaming or attacking
-    MapLocation nextLoc = Utils.roamGracefullyf(rc);
-
+  // TODO: change it
+  public static void mopperAttack(RobotController rc, MapLocation nextLoc) throws GameActionException {
     // how do we attack?
     for (Direction tryMopDirection : directions) {
       if (rc.canMopSwing(tryMopDirection)) {
@@ -81,7 +92,7 @@ public class Mopper extends Globals {
       }
 
       // check if there is a ruin but there is no robot on top of the ruin (tower)
-      state = MOPPER_STATE.saving;
+      state = MOPPER_STATE.notifyTower;
       // isSaving = true;
     }
   }

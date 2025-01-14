@@ -70,7 +70,7 @@ public class Utils extends Globals {
   }
 
   // TODO: send encoded message and parse
-  public static void updateFriendlyTowers(RobotController rc) throws GameActionException {
+  public static boolean updateFriendlyTowers(RobotController rc) throws GameActionException {
     // Search for all nearby robots
     RobotInfo[] allyRobots = rc.senseNearbyRobots(-1, rc.getTeam());
     for (RobotInfo ally : allyRobots) {
@@ -85,13 +85,15 @@ public class Utils extends Globals {
       if (knownTowersAllyLocation != null) {
         if (rc.canSendMessage(allyLocation)) {
           rc.sendMessage(allyLocation, MESSAGE_TYPE.save_chips.ordinal());
+          return true;
         }
         continue;
       }
       knownTowersInfos.add(ally);
     }
-
+    return false;
   }
+
   /*
    * //// message encoders ////
    * there are a bunch of overloading, each may contain a few message types if
