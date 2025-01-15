@@ -1,5 +1,9 @@
 package odemplayer;
 
+import java.util.ArrayList;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapInfo;
@@ -9,40 +13,56 @@ import battlecode.common.RobotInfo;
 
 public class Mopper extends Globals {
 
-  public enum MOPPER_ROLES {
+  private enum MOPPER_ROLES {
     messenger,
+    refiller,
     normal
   }
 
-  static MOPPER_ROLES role = MOPPER_ROLES.normal;
+  private enum MOPPER_STATE {
+    transferPaint,
+    notifyTower,
+    roam,
+    saving
+  }
+
+  private static MOPPER_ROLES role = MOPPER_ROLES.normal;
+
+  private static MOPPER_STATE state = MOPPER_STATE.roam;
 
   public static void runMopper(RobotController rc) throws GameActionException {
-    switch (role) {
-      case messenger:
-        if (isSaving && knownTowersInfos.size() > 0) {
-          // TODO: move to utils
+
+    // TODO: add a role that will support soldiers and refill them from tower
+    // contantly
+    //
+    switch (state) {
+      case roam:
+        Utils.roamGracefullyf(rc);
+        // find out more about attcks
+        // mopperAttack(rc, nextLoc);
+        if (checkNearbyRuins(rc) && knownTowersInfos.size() > 0) {
+          state = MOPPER_STATE.notifyTower;
           MapLocation destination = Utils.findClosestTower(knownTowersInfos, rc);
-
-          Direction dir = rc.getLocation().directionTo(destination);
-          // TODO: what happens if mopper is facing a wall?
-          if (rc.canMove(dir)) {
-            rc.move(dir);
-          }
+          PathFinder.moveToLocation(rc, destination);
         }
-        // NOTE: for debugging, remove when submitting
+        break;
+      // case messenger:
+      case saving:
+        MapLocation destination = Utils.findClosestTower(knownTowersInfos, rc);
+        PathFinder.moveToLocation(rc, destination);
+        boolean didUpdateTowerToSave = Utils.updateFriendlyTowers(rc);
+        // // NOTE: for debugging, remove when submitting
         rc.setIndicatorDot(rc.getLocation(), 0, 255, 0);
-
-        Utils.updateFriendlyTowers(rc);
-        checkNearbyRuins(rc);
-        // tbd
+        if (didUpdateTowerToSave) {
+          state = MOPPER_STATE.notifyTower;
+        }
 
       default:
     }
+  }
 
-    // NOTE: this code will execute on every role assigned to the unit. this code
-    // needs to improve, no logic involved in roaming or attacking
-    MapLocation nextLoc = Utils.roamGracefullyf(rc);
-
+  // TODO: change it
+  public static void mopperAttack(RobotController rc, MapLocation nextLoc) throws GameActionException {
     // how do we attack?
     for (Direction tryMopDirection : directions) {
       if (rc.canMopSwing(tryMopDirection)) {
@@ -56,9 +76,7 @@ public class Mopper extends Globals {
 
   }
 
-
-
-  public static void checkNearbyRuins(RobotController rc) throws GameActionException {
+  public static boolean checkNearbyRuins(RobotController rc) throws GameActionException {
     MapInfo[] nearbyTiles = rc.senseNearbyMapInfos();
 
     for (MapInfo tile : nearbyTiles) {
@@ -77,19 +95,37 @@ public class Mopper extends Globals {
         continue;
       }
 
-      // check if there is a ruin but there is no robot on top of the ruin (tower)
-      isSaving = true;
+      // found not occupied ruin
+      return true;
     }
+    return false;
   }
 
   public static void determineMopperRole(RobotController rc) {
     int id = rc.getID();
     switch (id % 2) {
       case 0:
-        role = MOPPER_ROLES.messenger;
+        Mopper.role = MOPPER_ROLES.messenger;
       default:
-        role = MOPPER_ROLES.normal;
+        Mopper.role = MOPPER_ROLES.normal;
     }
+  }
+
+  /**
+   * @param - how much paint to take or give to the unit (positive to give,
+   *          negative to take)
+   * @param - targetLocation
+   * @return void
+   */
+  public static void tranferPaintToLocation(RobotController rc,
+      MapLocation targetLocation, int amount) throws GameActionException {
+
+    if (rc.canTransferPaint(targetLocation, amount)) {
+      rc.transferPaint(targetLocation, amount);
+      return;
+    }
+
+    PathFinder.moveToLocation(rc, targetLocation);
   }
 
 }

@@ -5,8 +5,6 @@ import java.util.Arrays;
 
 import battlecode.common.*;
 
-//NOTE: document well each function, will help us in later stages of the project
-//
 public class Utils extends Globals {
 
   // TODO: not efficient enough! fix
@@ -19,13 +17,14 @@ public class Utils extends Globals {
    * @return next location - MapLocation
    */
   public static MapLocation roamGracefullyf(RobotController rc) throws GameActionException {
+
     MapInfo[] nearbyTiles = rc.senseNearbyMapInfos(2);
     for (MapInfo tile : nearbyTiles) {
       if (tile.isWall()) {
         MapLocation wallLocation = tile.getMapLocation();
         Direction dir = rc.getLocation().directionTo(wallLocation).opposite();
         if (rc.canMove(dir)) {
-          // NOTE: for testing purposes, remove after finished
+
           rc.setIndicatorDot(rc.getLocation(), 0, 0, 255);
           rc.move(dir);
           return rc.getLocation().add(dir);
@@ -89,32 +88,6 @@ public class Utils extends Globals {
     }
     return closestLocation;
   }
-  public static void updateFriendlyTowers(RobotController rc) throws GameActionException {
-    // Search for all nearby robots
-    RobotInfo[] allyRobots = rc.senseNearbyRobots(-1, rc.getTeam());
-    for (RobotInfo ally : allyRobots) {
-      if (!ally.getType().isTowerType())
-        continue;
-
-      MapLocation allyLocation = ally.location;
-
-      RobotInfo knownTowersAllyLocation = knownTowersInfos.stream()
-              .filter(tower -> tower.location == ally.location).findFirst().orElse(null);
-
-      if (knownTowersAllyLocation != null) {
-        if (isSaving) {
-          if (rc.canSendMessage(allyLocation)) {
-            rc.sendMessage(allyLocation, MESSAGE_TYPE.saveChips.ordinal());
-          }
-          isSaving = false;
-        }
-
-        continue;
-      }
-      knownTowersInfos.add(ally);
-    }
-
-  }
 
   //decision making functions
   public static UnitType WhatShouldIBuild(RobotController rc, MapLocation location){
@@ -170,5 +143,32 @@ public class Utils extends Globals {
   }
 
 
+
+  // TODO: send encoded message and parse
+  public static boolean updateFriendlyTowers(RobotController rc) throws GameActionException {
+    // Search for all nearby robots
+    RobotInfo[] allyRobots = rc.senseNearbyRobots(-1, rc.getTeam());
+    for (RobotInfo ally : allyRobots) {
+      if (!ally.getType().isTowerType())
+        continue;
+
+      MapLocation allyLocation = ally.location;
+
+      RobotInfo knownTowersAllyLocation = knownTowersInfos.stream()
+          .filter(tower -> tower.location == ally.location).findFirst().orElse(null);
+
+      if (knownTowersAllyLocation != null) {
+        if (rc.canSendMessage(allyLocation)) {
+          rc.sendMessage(allyLocation, MESSAGE_TYPE.saveChips.ordinal());
+          return true;
+        }
+        continue;
+      }
+
+      knownTowersInfos.add(ally);
+    }
+
+    return false;
+  }
 
 }
