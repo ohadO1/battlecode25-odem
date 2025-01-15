@@ -64,6 +64,30 @@ public class Utils extends Globals {
     }
     return closestLocation;
   }
+  //should it really return the position and not the robot? why?
+  /**
+   * finds the closest tower (out of the known tower locations)
+   *
+   * @param rc                   - RobotController
+   * @param knownTowersInfo - ArrayList<MapLocation>
+   * @param typeFilter - UnitType[]
+   * @return closestTowerLocation - MapLocation
+   */
+  public static MapLocation findClosestTower(ArrayList<RobotInfo> knownTowersInfo, RobotController rc, UnitType[] typeFilter) {
+    int distance = 99999;
+    MapLocation closestLocation = null;
+
+    for (RobotInfo knownTower : knownTowersInfos) {
+      MapLocation location = knownTower.getLocation();
+      int foundDistance = location.distanceSquaredTo(rc.getLocation());
+      if (distance > foundDistance && Arrays.asList(typeFilter).contains(knownTower.getType())) {
+        distance = foundDistance;
+        closestLocation = location;
+        continue;
+      }
+    }
+    return closestLocation;
+  }
   public static void updateFriendlyTowers(RobotController rc) throws GameActionException {
     // Search for all nearby robots
     RobotInfo[] allyRobots = rc.senseNearbyRobots(-1, rc.getTeam());
@@ -98,11 +122,11 @@ public class Utils extends Globals {
     if(rc.canBuildRobot(choice,location))
       return choice;
 
-    else return null;
+    return choice != null ? choice : DEFUALT_TOWER_TO_BUILD;
   }
 
   /*
-    //// message encoders ////
+    =========== message encoding ==========
     there are a bunch of overloading, each may contain a few message types if they require the same arguments.
     the smallest digit is used for message type.
     in general, information is read from smallest to largest bit, so you could do:
@@ -120,7 +144,8 @@ public class Utils extends Globals {
       break;
     }
 
-    System.out.println("message encoded: " + ret);
+//    System.out.println("message encoded: " + ret);
+    DecodedMessage msg = new DecodedMessage(ret);
 
     return ret;
   }
