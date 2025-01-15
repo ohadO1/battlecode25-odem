@@ -23,7 +23,7 @@ public class Globals {
   /********************************/
 
   public enum MESSAGE_TYPE {
-    save_chips,
+    saveChips,
     askForRefill,
     buildTowerHere,
     attackTower,
@@ -32,7 +32,7 @@ public class Globals {
   // in the encoder/decoder, use: messageTypesIndexes.indexOf(type) to get a
   // consistent int. (its an array but you get it)
   public static MESSAGE_TYPE[] messageTypesIndexes = {
-      MESSAGE_TYPE.save_chips,
+      MESSAGE_TYPE.saveChips,
       MESSAGE_TYPE.askForRefill,
       MESSAGE_TYPE.buildTowerHere,
       MESSAGE_TYPE.attackTower,
@@ -73,6 +73,8 @@ public class Globals {
 
   /********************** STARTEGY **************************/
 
+ 
+  static final UnitType DEFUALT_TOWER_TO_BUILD = UnitType.LEVEL_ONE_PAINT_TOWER;
   static final UnitType EARLY_GAME_MAIN_UNIT = UnitType.SOLDIER;
   static final UnitType EARLY_GAME_SECONDARY_UNIT = UnitType.SOLDIER;
   static final UnitType EARLY_GAME_LAST_UNIT = UnitType.SPLASHER;
