@@ -54,9 +54,6 @@ public class Globals {
 
   static ArrayList<RobotInfo> knownTowersInfos = new ArrayList<>();
 
-  // tower
-  static int savingTurns = 0;
-  //
 
   static final Random rng = new Random();
 

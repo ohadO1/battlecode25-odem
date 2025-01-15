@@ -180,7 +180,7 @@ class Soldier extends Globals {
         if(stateChanged){
 
           //look for a money tower
-          askToSaveDest = Utils.findClosestTower(knownTowersInfos, rc, new UnitType[]{UnitType.LEVEL_ONE_MONEY_TOWER, UnitType.LEVEL_THREE_MONEY_TOWER, UnitType.LEVEL_TWO_MONEY_TOWER});
+          askToSaveDest = Utils.findClosestTower(knownTowersInfos, rc, new UnitType[]{UnitType.LEVEL_ONE_PAINT_TOWER, UnitType.LEVEL_TWO_PAINT_TOWER, UnitType.LEVEL_THREE_PAINT_TOWER});
 
           //i dont know any money tower. ask any tower, he'll take care of it
           askToSaveDest = Utils.findClosestTower(knownTowersInfos,rc);
@@ -215,7 +215,7 @@ class Soldier extends Globals {
       case SOLDIER_STATES.waitForRefill:
       if(stateChanged) refillWait = 0;
       refillWait++;
-      if(refillWait%10 == 0) System.out.println("waiting for refill for " + refillWait + " turns.");
+      if(refillWait%10 == 0) rc.setIndicatorString("waiting for refill for " + refillWait + " turns.");
       break;
       //endregion
     }
