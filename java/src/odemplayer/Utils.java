@@ -11,6 +11,7 @@ public class Utils extends Globals {
 
   // TODO: not efficient enough! fix
   // TODO: add actual logic in WhatShouldIbuild, important function.
+  // TODO: finish ShouldIBuild
   /**
    * method that avoids walls when roaming (no task yet)
    * 
@@ -123,6 +124,11 @@ public class Utils extends Globals {
       return choice;
 
     return choice != null ? choice : DEFUALT_TOWER_TO_BUILD;
+  }
+  public static boolean ShouldIBuild(RobotController rc, ArrayList<RobotInfo> knownTowers){
+    //if i have enough paint and tower is far do it
+
+    return true;
   }
 
   /*

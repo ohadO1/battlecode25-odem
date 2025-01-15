@@ -59,7 +59,6 @@ class Soldier extends Globals {
     Utils.updateFriendlyTowers(rc);
 
     switch (state) {
-
       //region roam
       case roam:
 
@@ -79,7 +78,7 @@ class Soldier extends Globals {
 
         //if found ruin, decide what to do about it.
         if (ruinDest != null) {
-          if (false)  //shouldIBuild(findClosestTower(knownTowersLocations,rc),rc.getPaint())
+          if (ShouldIBuild(rc, Utils.findClosestTower(knownTowersInfos,rc)))
             state = SOLDIER_STATES.buildTower;
           else
             state = SOLDIER_STATES.notifyTower;
@@ -212,12 +211,13 @@ class Soldier extends Globals {
 
       break;
     //endregioni
-
+      //region wait for a refill
       case SOLDIER_STATES.waitForRefill:
-        if(stateChanged) refillWait = 0;
-        refillWait++;
-        if(refillWait%10 == 0) System.out.println("waiting for refill for " + refillWait + " turns.");
-        break;
+      if(stateChanged) refillWait = 0;
+      refillWait++;
+      if(refillWait%10 == 0) System.out.println("waiting for refill for " + refillWait + " turns.");
+      break;
+      //endregion
     }
 
     //states
