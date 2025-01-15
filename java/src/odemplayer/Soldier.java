@@ -78,7 +78,7 @@ class Soldier extends Globals {
 
         //if found ruin, decide what to do about it.
         if (ruinDest != null) {
-          if (ShouldIBuild(rc, Utils.findClosestTower(knownTowersInfos,rc)))
+          if (Utils.ShouldIBuild(rc, knownTowersInfos))
             state = SOLDIER_STATES.buildTower;
           else
             state = SOLDIER_STATES.notifyTower;
