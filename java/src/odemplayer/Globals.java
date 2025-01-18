@@ -73,7 +73,7 @@ public class Globals {
  
   static final UnitType DEFUALT_TOWER_TO_BUILD = UnitType.LEVEL_ONE_PAINT_TOWER;
   static final UnitType EARLY_GAME_MAIN_UNIT = UnitType.SOLDIER;
-  static final UnitType EARLY_GAME_SECONDARY_UNIT = UnitType.SOLDIER;
+  static final UnitType EARLY_GAME_SECONDARY_UNIT = UnitType.MOPPER;
   static final UnitType EARLY_GAME_LAST_UNIT = UnitType.SPLASHER;
   static final double SOLDIER_PAINT_FOR_TASK = 0.4; // when a soldier fails to refill paint but has above this, he will
   static final int PAINT_TOWER_SAVING_TURNS = 50;
