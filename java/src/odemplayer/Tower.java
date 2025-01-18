@@ -9,6 +9,10 @@ public class Tower extends Globals {
     normal
   }
 
+  // tower
+  static int savingTurns = 0;
+  //
+
   private static TOWER_STATE state = TOWER_STATE.normal;
 
   // TODO: too long. improve
@@ -21,17 +25,6 @@ public class Tower extends Globals {
         Direction dir = directions[rng.nextInt(directions.length)];
         MapLocation nextLocation = rc.getLocation().add(dir);
         int robotType = rng.nextInt(4);
-
-        // build more soldiers
-        if (robotType == 0 || robotType == 1 && rc.canBuildRobot(UnitType.SOLDIER, nextLocation)) {
-          rc.buildRobot(EARLY_GAME_MAIN_UNIT, nextLocation);
-          System.out.println("BUILT A SOLDIER");
-        }
-
-        else if (robotType == 2 && rc.canBuildRobot(UnitType.SPLASHER, nextLocation)) {
-          rc.buildRobot(UnitType.SPLASHER, nextLocation);
-          System.out.println("BUILT A SPLASHER");
-        }
 
         // build more soldiers
         if (robotType <= 1 && rc.canBuildRobot(EARLY_GAME_MAIN_UNIT, nextLocation)
@@ -51,10 +44,15 @@ public class Tower extends Globals {
           rc.buildRobot(EARLY_GAME_SECONDARY_UNIT, nextLocation);
           System.out.println("BUILT A MOPPER");
         }
-      case TOWER_STATE.saving: {
+        break;
+      case TOWER_STATE.saving:
         savingTurns--;
         rc.setIndicatorString("Saving For " + savingTurns + "More Turns");
-      }
+        if (savingTurns <= 0) {
+          state = TOWER_STATE.normal;
+        }
+        break;
+
     }
 
     // TODO: change attacks
@@ -69,14 +67,22 @@ public class Tower extends Globals {
     // TODO: move to messages module
     Message[] messages = rc.readMessages(-1);
     for (Message m : messages) {
-      System.out.println("Tower received message: '#" + m.getSenderID() + " " + m.getBytes());
+      System.out.println("Tower received message: '#" + m.getSenderID() + " " +
+          m.getBytes());
 
-      if (m.getBytes() == MESSAGE_TYPE.saveChips.ordinal() && state != TOWER_STATE.saving) {
-        // TODO: Make more specific
-        savingTurns = 50;
-        state = TOWER_STATE.saving;
+      DecodedMessage message = new DecodedMessage<>(m.getBytes());
+      MESSAGE_TYPE type = message.type;
+
+      //fix saving bug
+      switch (type) {
+        case MESSAGE_TYPE.saveChips:
+          // TODO: Make more specific
+          int saveGoal = (int)message.data;
+          // impelement save goal
+          savingTurns = 50;
+          state = TOWER_STATE.saving;
+          break;
       }
     }
   }
-
 }
