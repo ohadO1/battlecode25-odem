@@ -162,7 +162,7 @@ class Soldier extends Globals {
           if(rc.canSendMessage(notifyDest)) {
             rc.sendMessage(notifyDest,Utils.encodeMessage(MESSAGE_TYPE.buildTowerHere,ruinDest.getMapLocation()));
 
-            if(rc.getPaint()/rc.getType().paintCapacity > SOLDIER_PAINT_FOR_TASK)
+            if((double) rc.getPaint() /rc.getType().paintCapacity > SOLDIER_PAINT_FOR_TASK)
               state = SOLDIER_STATES.buildTower;
             else{
               Clock.yield();
@@ -201,7 +201,7 @@ class Soldier extends Globals {
           rc.sendMessage(askToSaveDest,Utils.encodeMessage(MESSAGE_TYPE.saveChips,towerToBuild.moneyCost));
 
           //ask for a refill
-          if(rc.getPaint()/rc.getType().paintCapacity < SOLDIER_PAINT_FOR_TASK){
+          if((double) rc.getPaint() /rc.getType().paintCapacity < SOLDIER_PAINT_FOR_TASK){
             Clock.yield();
             rc.sendMessage(askToSaveDest,Utils.encodeMessage(MESSAGE_TYPE.askForRefill,rc.getLocation()));
             state = SOLDIER_STATES.waitForRefill;
@@ -223,8 +223,8 @@ class Soldier extends Globals {
     //states
     stateChanged = state != statePrev;
     statePrev = state;
-    if(stateChanged) System.out.println("state changed: " + state.name());
-
+//    if(stateChanged) System.out.println("state changed: " + state.name());
+    rc.setIndicatorString("state: " + state.name());
   }
 
 }

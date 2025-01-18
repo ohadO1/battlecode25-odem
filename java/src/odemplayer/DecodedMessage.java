@@ -37,4 +37,7 @@ public class DecodedMessage<T> extends Globals{
 
         System.out.println("decoded message: [" + type.name() + ", " + data + "]");
     }
+    public String toString(){
+        return type.name() + ": " + data;
+    }
 }
