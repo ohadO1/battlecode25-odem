@@ -69,6 +69,7 @@ public class PathFinder extends Globals {
    * @returns - void
    */
   public static void moveToLocation(RobotController rc, MapLocation target) throws GameActionException {
+//    if(target.x < 0 || target.y < 0 || target.x > rc.getMapWidth() || target.y > rc.getMapHeight()) System.out.print("--- going out of bounds!");
     if (!target.equals(prevDest)) {
       prevDest = target;
       line = createLine(rc.getLocation(), target);
