@@ -25,9 +25,8 @@ class Soldier extends Globals {
   static SOLDIER_STATES state = SOLDIER_STATES.roam;
   static SOLDIER_STATES statePrev = state;
   static boolean stateChanged = false;
-
+  static int stateChangedRunAt = 0;
   /// state specific vars
-
 
   //notifyTower
   static MapLocation notifyDest;    //tower to notify ive found a ruin
@@ -59,6 +58,7 @@ class Soldier extends Globals {
     if(((double)rc.getPaint())/rc.getType().paintCapacity < SOLDIER_PAINT_FOR_URGENT_REFILL)
       state = SOLDIER_STATES.seekRefill;
 
+
     switch (state) {
       //region roam
       case roam:
@@ -77,7 +77,7 @@ class Soldier extends Globals {
             if (distance < currentDistance) {
               ruinDest = tile;
               currentDistance = distance;
-              System.out.println("found ruin at: " + ruinDest.getMapLocation() + ", robot at location: " + rc.senseRobotAtLocation(tile.getMapLocation()));
+//              System.out.println("found ruin at: " + ruinDest.getMapLocation() + ", robot at location: " + rc.senseRobotAtLocation(tile.getMapLocation()));
             }
           }
         }
@@ -113,8 +113,7 @@ class Soldier extends Globals {
       //region build tower
       case SOLDIER_STATES.buildTower:
 
-        if(stateChanged) System.out.println("starting to build tower at: " + ruinDest.getMapLocation());
-
+//        if(stateChanged) System.out.println("starting to build tower at: " + ruinDest.getMapLocation());
 
         //go to the ruin
         MapLocation targetLocation = ruinDest.getMapLocation();
@@ -237,8 +236,9 @@ class Soldier extends Globals {
       case SOLDIER_STATES.seekRefill:
 
         int missingPaint = rc.getType().paintCapacity - rc.getPaint();
-        if(stateChanged) {
-          System.out.print("looking for tower ... ");
+        if(stateChanged || refillTower == null) {
+          stateChangedRunAt = rc.getRoundNum();
+//          System.out.print("looking for tower ... ");
           refillTower = null;
 
           for(RobotInfo tower : knownTowersInfos){
@@ -250,22 +250,24 @@ class Soldier extends Globals {
 
           //no tower has enough paint. just go to the nearest and wait there.
           if(refillTower == null) refillTower = Utils.findClosestTowerInfo(knownTowersInfos,rc);
-          System.out.println("found " + refillTower);
+//          System.out.println("found " + refillTower.getLocation());
         }
 
+        if(refillTower == null) System.out.println("still didnt find any tower. state changed run at: " + stateChangedRunAt);
+
+        //move
+//        PathFinder.moveToLocation(rc,refillTower.getLocation());
+        if(rc.canMove(rc.getLocation().directionTo(refillTower.getLocation()))) rc.move(rc.getLocation().directionTo(refillTower.getLocation()));
+
         //am i there yet?
-        if(refillTower == null) System.out.println("still didnt find any tower.");
-        else if(!rc.canTransferPaint(refillTower.getLocation(),0)){
+        if(!rc.canTransferPaint(refillTower.getLocation(),0)){
 
           if(rc.canTransferPaint(refillTower.getLocation(),-missingPaint))
           {
             rc.transferPaint(refillTower.getLocation(),-missingPaint);
             state = SOLDIER_STATES.roam;
           }
-//          else System.out.println("waiting for " + missingPaint + " paint.");
-
         }
-        else PathFinder.moveToLocation(rc,refillTower.getLocation());
 
       break;
       //endregion
@@ -275,7 +277,7 @@ class Soldier extends Globals {
     stateChanged = state != statePrev;
     statePrev = state;
 
-    rc.setIndicatorString("state: " + state.name() + ", known towers: " + knownTowersInfos.size());
+    rc.setIndicatorString("state: " + state.name() + ", changed: " + (stateChanged ? 1 : 0) + ", known towers: " + knownTowersInfos.size());
   }
 
 }
