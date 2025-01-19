@@ -57,10 +57,7 @@ class Soldier extends Globals {
 
     // ==== seek refill ====
     if(((double)rc.getPaint())/rc.getType().paintCapacity < SOLDIER_PAINT_FOR_URGENT_REFILL)
-    {
       state = SOLDIER_STATES.seekRefill;
-//      System.out.println("seeking urget refill, amount: " + rc.getPaint());
-    }
 
     switch (state) {
       //region roam
@@ -241,6 +238,7 @@ class Soldier extends Globals {
 
         int missingPaint = rc.getType().paintCapacity - rc.getPaint();
         if(stateChanged) {
+          System.out.print("looking for tower ... ");
           refillTower = null;
 
           for(RobotInfo tower : knownTowersInfos){
@@ -252,17 +250,19 @@ class Soldier extends Globals {
 
           //no tower has enough paint. just go to the nearest and wait there.
           if(refillTower == null) refillTower = Utils.findClosestTowerInfo(knownTowersInfos,rc);
+          System.out.println("found " + refillTower);
         }
-  
-        //am i there yet?
-        if(!rc.canTransferPaint(refillTower.getLocation(),0)){
 
-          if(refillTower.getPaintAmount() >= missingPaint)
+        //am i there yet?
+        if(refillTower == null) System.out.println("still didnt find any tower.");
+        else if(!rc.canTransferPaint(refillTower.getLocation(),0)){
+
+          if(rc.canTransferPaint(refillTower.getLocation(),-missingPaint))
           {
             rc.transferPaint(refillTower.getLocation(),-missingPaint);
             state = SOLDIER_STATES.roam;
           }
-          else System.out.println("waiting for " + missingPaint + " paint.");
+//          else System.out.println("waiting for " + missingPaint + " paint.");
 
         }
         else PathFinder.moveToLocation(rc,refillTower.getLocation());
@@ -274,8 +274,8 @@ class Soldier extends Globals {
     //states
     stateChanged = state != statePrev;
     statePrev = state;
-//    System.out.println("state: " + state.name());
-    rc.setIndicatorString("state: " + state.name());
+
+    rc.setIndicatorString("state: " + state.name() + ", known towers: " + knownTowersInfos.size());
   }
 
 }
