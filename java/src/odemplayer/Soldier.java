@@ -55,6 +55,13 @@ class Soldier extends Globals {
 
     Utils.updateFriendlyTowers(rc);
 
+    // ==== seek refill ====
+    if(((double)rc.getPaint())/rc.getType().paintCapacity < SOLDIER_PAINT_FOR_URGENT_REFILL)
+    {
+      state = SOLDIER_STATES.seekRefill;
+//      System.out.println("seeking urget refill, amount: " + rc.getPaint());
+    }
+
     switch (state) {
       //region roam
       case roam:
@@ -101,7 +108,7 @@ class Soldier extends Globals {
         }
 
         // ==== seek refill ====
-        if(((double)rc.getPaint())/rc.getType().paintCapacity < SOLDIER_PAINT_FOR_REFILL)
+        if(((double)rc.getPaint())/rc.getType().paintCapacity < SOLDIER_PAINT_FOR_CASUAL_REFILL)
           state = SOLDIER_STATES.seekRefill;
 
         break;
@@ -215,6 +222,7 @@ class Soldier extends Globals {
         //send message
         if(rc.canSendMessage(askToSaveDest)){
 
+          System.out.println("asking tower to save " + towerToBuild.moneyCost);
           rc.sendMessage(askToSaveDest,Utils.encodeMessage(MESSAGE_TYPE.saveChips,towerToBuild.moneyCost));
 
           //ask for a refill
@@ -230,6 +238,7 @@ class Soldier extends Globals {
     //endregioni
       //region seek a refill
       case SOLDIER_STATES.seekRefill:
+
         int missingPaint = rc.getType().paintCapacity - rc.getPaint();
         if(stateChanged) {
           refillTower = null;
@@ -244,13 +253,17 @@ class Soldier extends Globals {
           //no tower has enough paint. just go to the nearest and wait there.
           if(refillTower == null) refillTower = Utils.findClosestTowerInfo(knownTowersInfos,rc);
         }
-        System.out.print("seeking refill from " + refillTower.getLocation());
-
+  
         //am i there yet?
         if(!rc.canTransferPaint(refillTower.getLocation(),0)){
 
-          if(refillTower.getPaintAmount() >= missingPaint) rc.transferPaint(refillTower.getLocation(),-missingPaint);
-          else rc.setIndicatorString("waiting for " + missingPaint + " paint.");
+          if(refillTower.getPaintAmount() >= missingPaint)
+          {
+            rc.transferPaint(refillTower.getLocation(),-missingPaint);
+            state = SOLDIER_STATES.roam;
+          }
+          else System.out.println("waiting for " + missingPaint + " paint.");
+
         }
         else PathFinder.moveToLocation(rc,refillTower.getLocation());
 
@@ -261,7 +274,7 @@ class Soldier extends Globals {
     //states
     stateChanged = state != statePrev;
     statePrev = state;
-//    if(stateChanged) System.out.println("state changed: " + state.name());
+//    System.out.println("state: " + state.name());
     rc.setIndicatorString("state: " + state.name());
   }
 
