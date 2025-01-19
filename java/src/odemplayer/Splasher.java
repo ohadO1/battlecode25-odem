@@ -204,11 +204,10 @@ public class Splasher extends Globals {
    * @throws GameActionException
    */
   private static void roamAndPaint(RobotController rc) throws GameActionException {
-      // Random movement
       if (rc.isMovementReady()) {
-        SPLASHER_STATE.roamGracefully(rc);
-          }
-      }
+        state = SPLASHER_STATE.roam;
+    }
+      
 
       // Paint the current location if it's not already painted by allies
       if (rc.isActionReady() && rc.canAttack(rc.getLocation())) {
