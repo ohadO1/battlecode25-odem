@@ -135,15 +135,18 @@ class Soldier extends Globals {
 
         //complete tower building
         towerToBuild = Utils.WhatShouldIBuild(rc,targetLocation);
-        System.out.println("chose type: " + towerToBuild);
-        if (towerToBuild != null) {
+//        System.out.println("chose type: " + towerToBuild);
+        if (towerToBuild != null && rc.canCompleteTowerPattern(towerToBuild,targetLocation)) {
 
           //not enough money. go ask tower to save
           if(rc.getChips() < towerToBuild.moneyCost){
             state = SOLDIER_STATES.notifySaveChips;
           }
-          rc.completeTowerPattern(towerToBuild, targetLocation);
-          state = SOLDIER_STATES.roam;
+          //enough chips. build tower.
+          else{
+            rc.completeTowerPattern(towerToBuild, targetLocation);
+            state = SOLDIER_STATES.roam;
+          }
         }
 
         break;
@@ -162,7 +165,7 @@ class Soldier extends Globals {
           if(rc.canSendMessage(notifyDest)) {
             rc.sendMessage(notifyDest,Utils.encodeMessage(MESSAGE_TYPE.buildTowerHere,ruinDest.getMapLocation()));
 
-            if(rc.getPaint()/rc.getType().paintCapacity > SOLDIER_PAINT_FOR_TASK)
+            if((double) rc.getPaint() /rc.getType().paintCapacity > SOLDIER_PAINT_FOR_TASK)
               state = SOLDIER_STATES.buildTower;
             else{
               Clock.yield();
@@ -201,7 +204,7 @@ class Soldier extends Globals {
           rc.sendMessage(askToSaveDest,Utils.encodeMessage(MESSAGE_TYPE.saveChips,towerToBuild.moneyCost));
 
           //ask for a refill
-          if(rc.getPaint()/rc.getType().paintCapacity < SOLDIER_PAINT_FOR_TASK){
+          if((double) rc.getPaint() /rc.getType().paintCapacity < SOLDIER_PAINT_FOR_TASK){
             Clock.yield();
             rc.sendMessage(askToSaveDest,Utils.encodeMessage(MESSAGE_TYPE.askForRefill,rc.getLocation()));
             state = SOLDIER_STATES.waitForRefill;
@@ -223,8 +226,8 @@ class Soldier extends Globals {
     //states
     stateChanged = state != statePrev;
     statePrev = state;
-    if(stateChanged) System.out.println("state changed: " + state.name());
-
+//    if(stateChanged) System.out.println("state changed: " + state.name());
+    rc.setIndicatorString("state: " + state.name());
   }
 
 }

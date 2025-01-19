@@ -35,6 +35,9 @@ public class DecodedMessage<T> extends Globals{
                 break;
         }
 
-        System.out.println("decoded message: [" + type.name() + ", " + data + "]");
+//        System.out.println("decoded message: [" + type.name() + ", " + data + "]");
+    }
+    public String toString(){
+        return type.name() + ": " + data;
     }
 }
