@@ -75,7 +75,8 @@ public class Globals {
   static final UnitType EARLY_GAME_MAIN_UNIT = UnitType.SOLDIER;
   static final UnitType EARLY_GAME_SECONDARY_UNIT = UnitType.MOPPER;
   static final UnitType EARLY_GAME_LAST_UNIT = UnitType.SPLASHER;
-  static final double SOLDIER_PAINT_FOR_TASK = 0.4; // when a soldier fails to refill paint but has above this, he will
+  static final double SOLDIER_PAINT_FOR_TASK = 0.4;                     // when a soldier fails to refill paint but has above this, he will
+  static final double SOLDIER_PAINT_FOR_REFILL = 0.3;                   // when a soldier has under this % he will stop whatever hes doing and seek refill.
   static final int PAINT_TOWER_SAVING_TURNS = 50;
 
 }

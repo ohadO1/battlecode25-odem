@@ -20,6 +20,7 @@ public class Tower extends Globals {
 
   private static TOWER_STATE state = TOWER_STATE.normal;
 
+  // TODO: dont create units all the time.
   // TODO: use current phase
   // TODO: use smart weighted random for choosing units, or just not random at all, to avoid extreme cases of too little of a unit.
   // TODO: send refill message to moppers
@@ -58,10 +59,10 @@ public class Tower extends Globals {
 
     // === ATTACK === //
 
-    // TODO: change attacks ONLY ENEMIES
+    // TODO: change attacks
 //    RobotInfo[] nearbyRobots = rc.senseNearbyRobots(); moved to top
     for (RobotInfo robot : nearbyRobots) {
-      if (rc.canAttack(robot.getLocation())) {
+      if (rc.canAttack(robot.getLocation()) && rc.getTeam() != robot.getTeam()) {
         rc.attack(robot.getLocation());
       }
     }

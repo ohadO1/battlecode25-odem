@@ -1,10 +1,6 @@
 package odemplayer;
 
-import antlr.collections.List;
 import battlecode.common.*;
-
-import java.nio.file.Path;
-import java.util.ArrayList;
 
 class Soldier extends Globals {
 
@@ -14,7 +10,7 @@ class Soldier extends Globals {
     notifyTower,    //found a ruin im not able to build. walk to notify tower
     buildTower,     //found a ruin im able to build. build it.
     notifySaveChips,//not enough chips to build a tower. find a money tower to ask to save.
-    waitForRefill,  //wait for a tower to send a mopper for a refill.
+    seekRefill,     //look for a tower with paint to refill paint from.
     attack,         //found a tower with enough friends to attack it.
   }
 
@@ -44,6 +40,7 @@ class Soldier extends Globals {
 
   //ask for refill
   static int refillWait;
+  static RobotInfo refillTower;
 
   //task specific vars
   static MapInfo ruinDest = null; //ruin im aiming to build a tower at
@@ -61,6 +58,11 @@ class Soldier extends Globals {
     switch (state) {
       //region roam
       case roam:
+
+        if(stateChanged){
+          ruinDest = null;
+          notifyDest = null;
+        }
 
         //search for the closest ruin in range
         MapInfo[] nearbyTiles = rc.senseNearbyMapInfos();
@@ -97,6 +99,11 @@ class Soldier extends Globals {
           }
 
         }
+
+        // ==== seek refill ====
+        if(((double)rc.getPaint())/rc.getType().paintCapacity < SOLDIER_PAINT_FOR_REFILL)
+          state = SOLDIER_STATES.seekRefill;
+
         break;
       //endregion
       //region build tower
@@ -104,10 +111,17 @@ class Soldier extends Globals {
 
         if(stateChanged) System.out.println("starting to build tower at: " + ruinDest.getMapLocation());
 
+
         //go to the ruin
         MapLocation targetLocation = ruinDest.getMapLocation();
         Direction dir = rc.getLocation().directionTo(targetLocation);
         PathFinder.moveToLocation(rc,targetLocation);                   //may conflict later in this state, maybe stop moving once there.
+
+        //someone else built it
+        if(rc.canSenseLocation(targetLocation) && rc.senseRobotAtLocation(targetLocation) != null){
+          task = null;
+          state = SOLDIER_STATES.roam;
+        }
 
         //try to mark
         MapLocation checkMarked = targetLocation.subtract(dir);
@@ -170,7 +184,7 @@ class Soldier extends Globals {
             else{
               Clock.yield();
               rc.sendMessage(notifyDest,Utils.encodeMessage(MESSAGE_TYPE.askForRefill,notifyDest));
-              state = SOLDIER_STATES.waitForRefill;
+              state = SOLDIER_STATES.seekRefill;
             }
 
           }
@@ -207,18 +221,39 @@ class Soldier extends Globals {
           if((double) rc.getPaint() /rc.getType().paintCapacity < SOLDIER_PAINT_FOR_TASK){
             Clock.yield();
             rc.sendMessage(askToSaveDest,Utils.encodeMessage(MESSAGE_TYPE.askForRefill,rc.getLocation()));
-            state = SOLDIER_STATES.waitForRefill;
+            state = SOLDIER_STATES.seekRefill;
           }
           else state = SOLDIER_STATES.buildTower;
         }
 
       break;
     //endregioni
-      //region wait for a refill
-      case SOLDIER_STATES.waitForRefill:
-      if(stateChanged) refillWait = 0;
-      refillWait++;
-      if(refillWait%10 == 0) rc.setIndicatorString("waiting for refill for " + refillWait + " turns.");
+      //region seek a refill
+      case SOLDIER_STATES.seekRefill:
+        int missingPaint = rc.getType().paintCapacity - rc.getPaint();
+        if(stateChanged) {
+          refillTower = null;
+
+          for(RobotInfo tower : knownTowersInfos){
+            if(refillTower == null ||
+                  (tower.getLocation().distanceSquaredTo(rc.getLocation()) < refillTower.getLocation().distanceSquaredTo(rc.getLocation()))
+                  && tower.getPaintAmount() >= missingPaint)
+              refillTower = tower;
+          }
+
+          //no tower has enough paint. just go to the nearest and wait there.
+          if(refillTower == null) refillTower = Utils.findClosestTowerInfo(knownTowersInfos,rc);
+        }
+        System.out.print("seeking refill from " + refillTower.getLocation());
+
+        //am i there yet?
+        if(!rc.canTransferPaint(refillTower.getLocation(),0)){
+
+          if(refillTower.getPaintAmount() >= missingPaint) rc.transferPaint(refillTower.getLocation(),-missingPaint);
+          else rc.setIndicatorString("waiting for " + missingPaint + " paint.");
+        }
+        else PathFinder.moveToLocation(rc,refillTower.getLocation());
+
       break;
       //endregion
     }

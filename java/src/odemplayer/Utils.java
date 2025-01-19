@@ -88,6 +88,23 @@ public class Utils extends Globals {
     }
     return closestLocation;
   }
+  public static RobotInfo findClosestTowerInfo(ArrayList<RobotInfo> knownTowersInfo, RobotController rc) {
+    int distance = 99999;
+    MapLocation closestLocation = null;
+    RobotInfo ret = null;
+
+    for (RobotInfo knownTower : knownTowersInfos) {
+      MapLocation location = knownTower.getLocation();
+      int foundDistance = location.distanceSquaredTo(rc.getLocation());
+      if (distance > foundDistance) {
+        distance = foundDistance;
+        closestLocation = location;
+        ret = knownTower;
+        continue;
+      }
+    }
+    return ret;
+  }
 
   //decision making functions
   public static UnitType WhatShouldIBuild(RobotController rc, MapLocation location){
