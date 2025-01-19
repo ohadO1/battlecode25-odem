@@ -51,11 +51,12 @@ public class Mopper extends Globals {
     // TODO: add a role that will support soldiers and refill them from tower
     // contantly
     //TODO: add check if task != null
+    
 
     switch (state) {
       case roam:
         MapLocation nextLoc = Utils.roamGracefullyf(rc);
-        attemptMopAttack(rc, nextLoc);
+        mopperAttack(rc, nextLoc);
 
         // find out more about attcks
         // mopperAttack(rc, nextLoc);
@@ -76,7 +77,7 @@ public class Mopper extends Globals {
         }
         PathFinder.moveToLocation(rc, towerDestination);
         if (rc.canSendMessage(towerDestination)) {
-          rc.sendMessage(towerDestination, Utils.encodeMessage(MESSAGE_TYPE.foundRuin, rc.getLocation()));
+          rc.sendMessage(towerDestination, Utils.encodeMessage(MESSAGE_TYPE.buildTowerHere, rc.getLocation()));
           if (rc.getPaint() < rc.getType().paintCapacity) {
             rc.sendMessage(towerDestination, Utils.encodeMessage(MESSAGE_TYPE.askForRefill, rc.getLocation()));
             state = MOPPER_STATE.waitForRefill;
@@ -93,7 +94,7 @@ public class Mopper extends Globals {
         if(refillWait%10 == 0) rc.setIndicatorString("waiting for refill for " + refillWait + " turns.");
         break;
       
-        case refillAlly:
+      case refillAlly:
         if (allyToRefill == null) {
           state = MOPPER_STATE.roam;
           break;
@@ -105,11 +106,7 @@ public class Mopper extends Globals {
         }
         break;
       case enemyDetected:
-        // מצב שבו ידוע שיש אזור עם צבע אויב, ננסה למופ/להסיר
-        // אפשר לבצע mop רגיל או mopSwing
-        attemptMopAttack(rc, rc.getLocation());
-
-        // בתום הפעולה נחזור לשוטט
+        mopperAttack(rc, rc.getLocation());
         state = MOPPER_STATE.roam;
         break;
       case saving:
