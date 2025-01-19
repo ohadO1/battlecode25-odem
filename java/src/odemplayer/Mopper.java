@@ -10,43 +10,105 @@ import battlecode.common.MapInfo;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.RobotInfo;
+import battlecode.common.*;
 
 public class Mopper extends Globals {
 
   private enum MOPPER_ROLES {
     messenger,
     refiller,
-    normal
+    normal,
+    attack
   }
 
   private enum MOPPER_STATE {
     transferPaint,
     notifyTower,
     roam,
-    saving
+    saving,
+    attack,
+    refillAlly,
+    waitForRefill,
+    enemyDetected
+  }
+  static MOPPER_TASKS task = null;
+  enum MOPPER_TASKS {
+    transferPaint,
+    attack,
+    remove_enemy_paint
   }
 
   private static MOPPER_ROLES role = MOPPER_ROLES.normal;
-
   private static MOPPER_STATE state = MOPPER_STATE.roam;
+  static MOPPER_STATE statePrev = state;
+  private static MapLocation towerDestination = null;
+  static boolean stateChanged = false;
+  static MapLocation allyToRefill = null;
+  static int refillWait = 0;
 
   public static void runMopper(RobotController rc) throws GameActionException {
-
+    Utils.updateFriendlyTowers(rc);
     // TODO: add a role that will support soldiers and refill them from tower
     // contantly
-    //
+    //TODO: add check if task != null
+    
+
     switch (state) {
       case roam:
-        Utils.roamGracefullyf(rc);
+        MapLocation nextLoc = Utils.roamGracefullyf(rc);
+        mopperAttack(rc, nextLoc);
+
         // find out more about attcks
         // mopperAttack(rc, nextLoc);
         if (checkNearbyRuins(rc) && knownTowersInfos.size() > 0) {
           state = MOPPER_STATE.notifyTower;
-          MapLocation destination = Utils.findClosestTower(knownTowersInfos, rc);
-          PathFinder.moveToLocation(rc, destination);
+          towerDestination = Utils.findClosestTower(knownTowersInfos, rc);
+          PathFinder.moveToLocation(rc, towerDestination);
+          if (towerDestination != null) {
+            state = MOPPER_STATE.notifyTower;
+          }
         }
         break;
       // case messenger:
+      case notifyTower:
+        if (towerDestination == null) {
+          state = MOPPER_STATE.roam;
+          break;
+        }
+        PathFinder.moveToLocation(rc, towerDestination);
+        if (rc.canSendMessage(towerDestination)) {
+          rc.sendMessage(towerDestination, Utils.encodeMessage(MESSAGE_TYPE.buildTowerHere, rc.getLocation()));
+          if (rc.getPaint() < rc.getType().paintCapacity) {
+            rc.sendMessage(towerDestination, Utils.encodeMessage(MESSAGE_TYPE.askForRefill, rc.getLocation()));
+            state = MOPPER_STATE.waitForRefill;
+          } else {
+            state = MOPPER_STATE.roam;
+          }
+        }        
+
+        break;
+      case waitForRefill:
+      //TODO: update to the new version of refill Itay is working on
+        if(stateChanged) refillWait = 0;
+        refillWait++;
+        if(refillWait%10 == 0) rc.setIndicatorString("waiting for refill for " + refillWait + " turns.");
+        break;
+      
+      case refillAlly:
+        if (allyToRefill == null) {
+          state = MOPPER_STATE.roam;
+          break;
+        }
+        PathFinder.moveToLocation(rc, allyToRefill);
+        if (rc.canTransferPaint(allyToRefill,  rc.getType().paintCapacity - rc.getPaint())) { //to fix because it can communicate with other robots
+          rc.transferPaint(allyToRefill,  rc.getType().paintCapacity - rc.getPaint()); // to fix too
+          state = MOPPER_STATE.roam;
+        }
+        break;
+      case enemyDetected:
+        mopperAttack(rc, rc.getLocation());
+        state = MOPPER_STATE.roam;
+        break;
       case saving:
         MapLocation destination = Utils.findClosestTower(knownTowersInfos, rc);
         PathFinder.moveToLocation(rc, destination);
@@ -63,13 +125,11 @@ public class Mopper extends Globals {
 
   // TODO: change it
   public static void mopperAttack(RobotController rc, MapLocation nextLoc) throws GameActionException {
-    // how do we attack?
     for (Direction tryMopDirection : directions) {
       if (rc.canMopSwing(tryMopDirection)) {
         rc.mopSwing(tryMopDirection);
       }
     }
-
     if (rc.canAttack(nextLoc)) {
       rc.attack(nextLoc);
     }
