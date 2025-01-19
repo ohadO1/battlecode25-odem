@@ -1,77 +1,145 @@
 package odemplayer;
 
+import java.util.ArrayList;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapInfo;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.RobotInfo;
+import battlecode.common.*;
 
 public class Mopper extends Globals {
 
+  private enum MOPPER_ROLES {
+    messenger,
+    refiller,
+    normal,
+    attack
+  }
+
+  private enum MOPPER_STATE {
+    transferPaint,
+    notifyTower,
+    roam,
+    saving,
+    attack,
+    refillAlly,
+    waitForRefill,
+    enemyDetected
+  }
+  static MOPPER_TASKS task = null;
+  enum MOPPER_TASKS {
+    transferPaint,
+    attack,
+    remove_enemy_paint
+  }
+
+  private static MOPPER_ROLES role = MOPPER_ROLES.normal;
+  private static MOPPER_STATE state = MOPPER_STATE.roam;
+  static MOPPER_STATE statePrev = state;
+  private static MapLocation towerDestination = null;
+  static boolean stateChanged = false;
+  static MapLocation allyToRefill = null;
+  static int refillWait = 0;
+
   public static void runMopper(RobotController rc) throws GameActionException {
-    if (isMessanger == true) {
-      System.out.println("IN IF STATEMENT, MARKING");
-      rc.setIndicatorDot(rc.getLocation(), 0, 255, 0);
+    Utils.updateFriendlyTowers(rc);
+    // TODO: add a role that will support soldiers and refill them from tower
+    // contantly
+    //TODO: add check if task != null
+
+    switch (state) {
+      case roam:
+        MapLocation nextLoc = Utils.roamGracefullyf(rc);
+        attemptMopAttack(rc, nextLoc);
+
+        // find out more about attcks
+        // mopperAttack(rc, nextLoc);
+        if (checkNearbyRuins(rc) && knownTowersInfos.size() > 0) {
+          state = MOPPER_STATE.notifyTower;
+          towerDestination = Utils.findClosestTower(knownTowersInfos, rc);
+          PathFinder.moveToLocation(rc, towerDestination);
+          if (towerDestination != null) {
+            state = MOPPER_STATE.notifyTower;
+          }
+        }
+        break;
+      // case messenger:
+      case notifyTower:
+        if (towerDestination == null) {
+          state = MOPPER_STATE.roam;
+          break;
+        }
+        PathFinder.moveToLocation(rc, towerDestination);
+        if (rc.canSendMessage(towerDestination)) {
+          rc.sendMessage(towerDestination, Utils.encodeMessage(MESSAGE_TYPE.foundRuin, rc.getLocation()));
+          if (rc.getPaint() < rc.getType().paintCapacity) {
+            rc.sendMessage(towerDestination, Utils.encodeMessage(MESSAGE_TYPE.askForRefill, rc.getLocation()));
+            state = MOPPER_STATE.waitForRefill;
+          } else {
+            state = MOPPER_STATE.roam;
+          }
+        }        
+
+        break;
+      case waitForRefill:
+      //TODO: update to the new version of refill Itay is working on
+        if(stateChanged) refillWait = 0;
+        refillWait++;
+        if(refillWait%10 == 0) rc.setIndicatorString("waiting for refill for " + refillWait + " turns.");
+        break;
+      
+        case refillAlly:
+        if (allyToRefill == null) {
+          state = MOPPER_STATE.roam;
+          break;
+        }
+        PathFinder.moveToLocation(rc, allyToRefill);
+        if (rc.canTransferPaint(allyToRefill,  rc.getType().paintCapacity - rc.getPaint())) { //to fix because it can communicate with other robots
+          rc.transferPaint(allyToRefill,  rc.getType().paintCapacity - rc.getPaint()); // to fix too
+          state = MOPPER_STATE.roam;
+        }
+        break;
+      case enemyDetected:
+        // מצב שבו ידוע שיש אזור עם צבע אויב, ננסה למופ/להסיר
+        // אפשר לבצע mop רגיל או mopSwing
+        attemptMopAttack(rc, rc.getLocation());
+
+        // בתום הפעולה נחזור לשוטט
+        state = MOPPER_STATE.roam;
+        break;
+      case saving:
+        MapLocation destination = Utils.findClosestTower(knownTowersInfos, rc);
+        PathFinder.moveToLocation(rc, destination);
+        boolean didUpdateTowerToSave = Utils.updateFriendlyTowers(rc);
+        // // NOTE: for debugging, remove when submitting
+        rc.setIndicatorDot(rc.getLocation(), 0, 255, 0);
+        if (didUpdateTowerToSave) {
+          state = MOPPER_STATE.notifyTower;
+        }
+
+      default:
     }
+  }
 
-    if (isMessanger && isSaving && knownTowers.size() > 0) {
-      // TODO: move to utils
-      MapLocation destination = Utils.findClosestTower(knownTowers, rc);
-
-      Direction dir = rc.getLocation().directionTo(destination);
-      // TODO: what happenes if mopper is facing a wall?
-      if (rc.canMove(dir)) {
-        rc.move(dir);
-      }
-    }
-
-    MapLocation nextLoc = Utils.roamGracefullyf(rc);
-
+  // TODO: change it
+  public static void mopperAttack(RobotController rc, MapLocation nextLoc) throws GameActionException {
     for (Direction tryMopDirection : directions) {
       if (rc.canMopSwing(tryMopDirection)) {
         rc.mopSwing(tryMopDirection);
       }
     }
-
-    // TODO: attack by radius
     if (rc.canAttack(nextLoc)) {
       rc.attack(nextLoc);
     }
 
-    // if we are a messanger, we also want to update friendly towers and check for
-    // ruins
-    if (isMessanger) {
-      updateFriendlyTowers(rc);
-      checkNearbyRuins(rc);
-    }
   }
 
-  public static void updateFriendlyTowers(RobotController rc) throws GameActionException {
-    // Search for all nearby robots
-    RobotInfo[] allyRobots = rc.senseNearbyRobots(-1, rc.getTeam());
-    for (RobotInfo ally : allyRobots) {
-      if (!ally.getType().isTowerType())
-        continue;
-
-      MapLocation allyLocation = ally.location;
-      if (knownTowers.contains(allyLocation)) {
-        if (isSaving) {
-          if (rc.canSendMessage(allyLocation)) {
-            rc.sendMessage(allyLocation, MessageType.SAVE_CHIPS.ordinal());
-          }
-          isSaving = false;
-        }
-
-        continue;
-      }
-
-      knownTowers.add(allyLocation);
-    }
-
-  }
-
-  public static void checkNearbyRuins(RobotController rc) throws GameActionException {
+  public static boolean checkNearbyRuins(RobotController rc) throws GameActionException {
     MapInfo[] nearbyTiles = rc.senseNearbyMapInfos();
 
     for (MapInfo tile : nearbyTiles) {
@@ -90,9 +158,37 @@ public class Mopper extends Globals {
         continue;
       }
 
-      // check if there is a ruin but there is no robot on top of the ruin (tower)
-      isSaving = true;
+      // found not occupied ruin
+      return true;
     }
+    return false;
+  }
+
+  public static void determineMopperRole(RobotController rc) {
+    int id = rc.getID();
+    switch (id % 2) {
+      case 0:
+        Mopper.role = MOPPER_ROLES.messenger;
+      default:
+        Mopper.role = MOPPER_ROLES.normal;
+    }
+  }
+
+  /**
+   * @param - how much paint to take or give to the unit (positive to give,
+   *          negative to take)
+   * @param - targetLocation
+   * @return void
+   */
+  public static void tranferPaintToLocation(RobotController rc,
+      MapLocation targetLocation, int amount) throws GameActionException {
+
+    if (rc.canTransferPaint(targetLocation, amount)) {
+      rc.transferPaint(targetLocation, amount);
+      return;
+    }
+
+    PathFinder.moveToLocation(rc, targetLocation);
   }
 
 }
