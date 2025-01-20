@@ -22,7 +22,7 @@ class Soldier extends Globals {
     attack,
   }
 
-  static SOLDIER_STATES state = SOLDIER_STATES.roam;
+  public static SOLDIER_STATES state = SOLDIER_STATES.roam;
   static SOLDIER_STATES statePrev = state;
   static boolean stateChanged = false;
   static int stateChangedRunAt = 0;
@@ -44,7 +44,6 @@ class Soldier extends Globals {
   //task specific vars
   static MapInfo ruinDest = null; //ruin im aiming to build a tower at
 
-  // TODO: make moppers receive message of asking for a refill
   // TODO: attack state
   // TODO: scout direction state
   // TODO: search for enemy towers and call an attack

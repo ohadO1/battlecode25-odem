@@ -68,6 +68,12 @@ public class Globals {
       Direction.NORTHWEST,
   };
 
+  /********************** UTILITY VARIABLES *****************/
+
+  static int circleRoamRadius = 0;
+  static int circleRoamUpdate = 0;
+  static int circleRoamAngle = 0;
+
   /********************** STARTEGY **************************/
 
  

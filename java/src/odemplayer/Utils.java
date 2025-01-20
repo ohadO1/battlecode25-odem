@@ -41,6 +41,55 @@ public class Utils extends Globals {
 
     return rc.getLocation().add(dir);
   }
+  /**
+   * similar to roamGracefully but in a circle that gets larger
+   *
+   * @param rc - RobotController
+   * @return next location - MapLocation
+   */
+  public static MapLocation roamCricleGracefully(RobotController rc) throws GameActionException {
+
+    //reset radius if havent used this for a while
+    if(rc.getRoundNum() - circleRoamUpdate > 10)
+      circleRoamRadius = 1;
+
+    //increase radius
+    if(rc.getRoundNum() % 10 == 0) circleRoamRadius++;
+
+    //progress angle
+    if(rc.getRoundNum() % 2 == 0) circleRoamAngle = (circleRoamAngle+1)%360;
+
+    //find dest
+    double x = rc.getLocation().x + circleRoamRadius*Math.cos(circleRoamAngle);
+    double y = rc.getLocation().y + circleRoamRadius*Math.sin(circleRoamAngle);
+    MapLocation dest = new MapLocation((int)x,(int)y);
+
+
+
+
+    MapInfo[] nearbyTiles = rc.senseNearbyMapInfos(2);
+    for (MapInfo tile : nearbyTiles) {
+      if (tile.isWall()) {
+        MapLocation wallLocation = tile.getMapLocation();
+        Direction dir = rc.getLocation().directionTo(wallLocation).opposite();
+        if (rc.canMove(dir)) {
+
+          rc.setIndicatorDot(rc.getLocation(), 0, 0, 255);
+          rc.move(dir);
+          return rc.getLocation().add(dir);
+        }
+        return null;
+      }
+    }
+
+    Direction dir = directions[rng.nextInt(directions.length)];
+
+    if (rc.canMove(dir)) {
+      rc.move(dir);
+    }
+
+    return rc.getLocation().add(dir);
+  }
 
   /**
    * finds the closest tower (out of the known tower locations)
