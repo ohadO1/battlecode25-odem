@@ -3,6 +3,7 @@ package odemplayer;
 
 import java.util.HashSet;
 
+import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
@@ -22,9 +23,8 @@ public class PathFinder extends Globals {
    * @param a source unit maplocation - MapLocation
    * @param b target unit maplocation - MapLocation
    */
-  private static HashSet<MapLocation> createLine(MapLocation a, MapLocation b) {
+  public static HashSet<MapLocation> createLine(MapLocation a, MapLocation b) {
     HashSet<MapLocation> locs = new HashSet<>();
-
     int x = a.x, y = a.y;
     int dx = b.x - a.x;
     int dy = b.y - a.y;
@@ -38,7 +38,7 @@ public class PathFinder extends Globals {
       for (int i = 0; i < d; i++) {
         locs.add(new MapLocation(x, y));
         x += sx;
-        y += dy;
+        r += dy;
         if (r >= dx) {
           locs.add(new MapLocation(x, y));
           y += sy;
@@ -48,7 +48,7 @@ public class PathFinder extends Globals {
     } else {
       for (int i = 0; i < d; i++) {
         locs.add(new MapLocation(x, y));
-        y += sx;
+        y += sy;
         r += dx;
         if (r >= dy) {
           locs.add(new MapLocation(x, y));
@@ -68,8 +68,9 @@ public class PathFinder extends Globals {
    * @param target - MapLocation (target location)
    * @returns - void
    */
+
   public static void moveToLocation(RobotController rc, MapLocation target) throws GameActionException {
-//    if(target.x < 0 || target.y < 0 || target.x > rc.getMapWidth() || target.y > rc.getMapHeight()) System.out.print("--- going out of bounds!");
+
     if (!target.equals(prevDest)) {
       prevDest = target;
       line = createLine(rc.getLocation(), target);
@@ -82,6 +83,7 @@ public class PathFinder extends Globals {
     if (!isTracing) {
       Direction dir = rc.getLocation().directionTo(target);
       rc.setIndicatorDot(rc.getLocation().add(dir), 255, 0, 0);
+      Clock.yield();
 
       if (rc.canMove(dir)) {
         rc.move(dir);
@@ -90,24 +92,22 @@ public class PathFinder extends Globals {
         obstacleStartDist = rc.getLocation().distanceSquaredTo(target);
         tracingDir = dir;
       }
-      return;
-    }
-    // tracing
-    if (line.contains(rc.getLocation()) && rc.getLocation().distanceSquaredTo(target) < obstacleStartDist) {
-      isTracing = false;
-    }
+    } else {
+      if (line.contains(rc.getLocation()) && rc.getLocation().distanceSquaredTo(target) < obstacleStartDist) {
+        isTracing = false;
+      }
 
-    for (int i = 0; i < 9; i++) {
-      if (rc.canMove(tracingDir)) {
-        rc.move(tracingDir);
-        tracingDir = tracingDir.rotateRight();
-        tracingDir = tracingDir.rotateRight();
-        break;
-      } else {
-        tracingDir = tracingDir.rotateLeft();
+      for (int i = 0; i < 9; i++) {
+        if (rc.canMove(tracingDir)) {
+          rc.move(tracingDir);
+          tracingDir = tracingDir.rotateRight();
+          tracingDir = tracingDir.rotateRight();
+          break;
+        } else {
+          tracingDir = tracingDir.rotateLeft();
+        }
       }
     }
-
   }
 
 }
