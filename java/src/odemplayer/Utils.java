@@ -88,6 +88,21 @@ public class Utils extends Globals {
     }
     return closestLocation;
   }
+  public static RobotInfo findClosestTowerInfo(ArrayList<RobotInfo> knownTowersInfo, RobotController rc) {
+    int distance = 99999;
+    RobotInfo ret = null;
+
+    for (RobotInfo knownTower : knownTowersInfos) {
+      MapLocation location = knownTower.getLocation();
+      int foundDistance = location.distanceSquaredTo(rc.getLocation());
+      if (distance > foundDistance) {
+        distance = foundDistance;
+        ret = knownTower;
+      }
+    }
+    if(ret == null) System.out.println("asked to find closest tower and returned null.");
+    return ret;
+  }
 
   //decision making functions
   public static UnitType WhatShouldIBuild(RobotController rc, MapLocation location){
@@ -123,7 +138,7 @@ public class Utils extends Globals {
       break;
     }
 
-//    System.out.println("message encoded: " + ret);
+    System.out.println("location message encoded: " + ret);
     DecodedMessage msg = new DecodedMessage(ret);
 
     return ret;
@@ -137,7 +152,7 @@ public class Utils extends Globals {
         break;
     }
 
-    System.out.println("message encoded: " + ret);
+    System.out.println("int message encoded: " + ret);
 
     return ret;
   }
@@ -149,23 +164,15 @@ public class Utils extends Globals {
     // Search for all nearby robots
     RobotInfo[] allyRobots = rc.senseNearbyRobots(-1, rc.getTeam());
     for (RobotInfo ally : allyRobots) {
-      if (!ally.getType().isTowerType())
-        continue;
 
-      MapLocation allyLocation = ally.location;
+      //feel free to uncomment this if you have any idea what's its purpose.
+//      MapLocation allyLocation = ally.location;
+//
+//      RobotInfo knownTowersAllyLocation = knownTowersInfos.stream()
+//          .filter(tower -> tower.location == ally.location).findFirst().orElse(null);
 
-      RobotInfo knownTowersAllyLocation = knownTowersInfos.stream()
-          .filter(tower -> tower.location == ally.location).findFirst().orElse(null);
-
-      if (knownTowersAllyLocation != null) {
-        if (rc.canSendMessage(allyLocation)) {
-          rc.sendMessage(allyLocation, MESSAGE_TYPE.saveChips.ordinal());
-          return true;
-        }
-        continue;
-      }
-
-      knownTowersInfos.add(ally);
+      if(!knownTowersInfos.contains(ally) && ally.getType().isTowerType())
+        knownTowersInfos.add(ally);
     }
 
     return false;

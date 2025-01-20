@@ -20,6 +20,7 @@ public class Tower extends Globals {
 
   private static TOWER_STATE state = TOWER_STATE.normal;
 
+  // TODO: dont create units all the time.
   // TODO: use current phase
   // TODO: use smart weighted random for choosing units, or just not random at all, to avoid extreme cases of too little of a unit.
   // TODO: send refill message to moppers
@@ -51,6 +52,7 @@ public class Tower extends Globals {
         if (rc.getChips() >= saveGoal) {
           state = TOWER_STATE.waitAfterSave;
           savingTurns = 2;
+          rc.setIndicatorString("saving, aiming for: " + saveGoal);
         }
         break;
 
@@ -58,10 +60,9 @@ public class Tower extends Globals {
 
     // === ATTACK === //
 
-    // TODO: change attacks ONLY ENEMIES
-//    RobotInfo[] nearbyRobots = rc.senseNearbyRobots(); moved to top
+    // TODO: change attacks
     for (RobotInfo robot : nearbyRobots) {
-      if (rc.canAttack(robot.getLocation())) {
+      if (rc.canAttack(robot.getLocation()) && rc.getTeam() != robot.getTeam()) {
         rc.attack(robot.getLocation());
       }
     }
@@ -74,13 +75,12 @@ public class Tower extends Globals {
     for (Message m : messages) {
 
       DecodedMessage<Object> message = new DecodedMessage<>(m.getBytes());
-      System.out.println("Tower received message: '#" + m.getSenderID() + " " + message);
+      System.out.println("Tower received message: #" + m.getSenderID() + " " + message);
 
       MESSAGE_TYPE type = message.type;
       switch (type) {
         case MESSAGE_TYPE.saveChips:
           saveGoal = (int)message.data;
-//          savingTurns = 50;
           state = TOWER_STATE.saving;
           break;
 

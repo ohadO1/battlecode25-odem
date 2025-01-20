@@ -31,6 +31,7 @@ public class DecodedMessage<T> extends Globals{
                 data = ((T)new MapLocation(x,y));
                 break;
             case MESSAGE_TYPE.saveChips:
+//                System.out.println("asking to save " + data);
                 data = ((T)Integer.valueOf(message));
                 break;
         }
