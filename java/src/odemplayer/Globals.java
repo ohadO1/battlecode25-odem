@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Random;
 
 import battlecode.common.Direction;
+import battlecode.common.MapLocation;
 import battlecode.common.RobotInfo;
 import battlecode.common.UnitType;
 
@@ -73,6 +74,7 @@ public class Globals {
   static int circleRoamRadius = 0;
   static int circleRoamUpdate = 0;
   static int circleRoamAngle = 0;
+  static MapLocation circleRoamdest  = new MapLocation(0,0);
 
   /********************** STARTEGY **************************/
 
@@ -86,4 +88,5 @@ public class Globals {
   static final double SOLDIER_PAINT_FOR_URGENT_REFILL = 0.3;                   // when a soldier has under this % he will stop whatever hes doing and seek refill.
   static final int PAINT_TOWER_SAVING_TURNS = 50;
 
+  static final int CIRCLE_ROAM_ROUNDS_TO_RESET = 15;    //circle roam will reset its radius if not used after this amount of turns
 }

@@ -42,53 +42,42 @@ public class Utils extends Globals {
     return rc.getLocation().add(dir);
   }
   /**
-   * similar to roamGracefully but in a circle that gets larger
+   * moves using pathfinder in a circular manner, the radius increasing with time.
+   * the redius resets on its own if not run for CIRCLE_ROAM_ROUNDS_TO_RESET rounds.
+   * the destination updates when you reach it
    *
    * @param rc - RobotController
-   * @return next location - MapLocation
+   * @return destination - MapLocation
    */
-  public static MapLocation roamCricleGracefully(RobotController rc) throws GameActionException {
+  public static MapLocation roamCircle(RobotController rc) throws GameActionException {
 
     //reset radius if havent used this for a while
-    if(rc.getRoundNum() - circleRoamUpdate > 10)
+    if(rc.getRoundNum() - circleRoamUpdate > CIRCLE_ROAM_ROUNDS_TO_RESET) {
       circleRoamRadius = 1;
+      circleRoamdest = rc.getLocation();
+    }
+    circleRoamUpdate = rc.getRoundNum();
 
-    //increase radius
-    if(rc.getRoundNum() % 10 == 0) circleRoamRadius++;
+    //set new dest
+    if(rc.getLocation().distanceSquaredTo(circleRoamdest) < 2) {
 
-    //progress angle
-    if(rc.getRoundNum() % 2 == 0) circleRoamAngle = (circleRoamAngle+1)%360;
+      //increase radius
+      circleRoamRadius++;
 
-    //find dest
-    double x = rc.getLocation().x + circleRoamRadius*Math.cos(circleRoamAngle);
-    double y = rc.getLocation().y + circleRoamRadius*Math.sin(circleRoamAngle);
-    MapLocation dest = new MapLocation((int)x,(int)y);
+      //progress angle
+      int aAdd = (100)/(circleRoamRadius+1)+10;
+      circleRoamAngle = (circleRoamAngle + aAdd) % 360;
 
-
-
-
-    MapInfo[] nearbyTiles = rc.senseNearbyMapInfos(2);
-    for (MapInfo tile : nearbyTiles) {
-      if (tile.isWall()) {
-        MapLocation wallLocation = tile.getMapLocation();
-        Direction dir = rc.getLocation().directionTo(wallLocation).opposite();
-        if (rc.canMove(dir)) {
-
-          rc.setIndicatorDot(rc.getLocation(), 0, 0, 255);
-          rc.move(dir);
-          return rc.getLocation().add(dir);
-        }
-        return null;
-      }
+      //find dest
+      double x = rc.getLocation().x + circleRoamRadius * Math.cos(circleRoamAngle);
+      double y = rc.getLocation().y + circleRoamRadius * Math.sin(circleRoamAngle);
+      circleRoamdest = new MapLocation((int) x, (int) y);
     }
 
-    Direction dir = directions[rng.nextInt(directions.length)];
+    //approach dest
+    PathFinder.moveToLocation(rc,circleRoamdest);
 
-    if (rc.canMove(dir)) {
-      rc.move(dir);
-    }
-
-    return rc.getLocation().add(dir);
+    return circleRoamdest;
   }
 
   /**

@@ -92,7 +92,7 @@ class Soldier extends Globals {
         }
         //if didn't find ruin, wander around.
         else {
-          MapLocation nextLoc = Utils.roamGracefullyf(rc);
+          MapLocation nextLoc = Utils.roamCircle(rc);
 
           if (rc.canAttack(nextLoc)) {
             MapInfo nextLocInfo = rc.senseMapInfo(nextLoc);
@@ -255,8 +255,8 @@ class Soldier extends Globals {
         if(refillTower == null) System.out.println("still didnt find any tower. state changed run at: " + stateChangedRunAt);
 
         //move
-//        PathFinder.moveToLocation(rc,refillTower.getLocation());
-        if(rc.canMove(rc.getLocation().directionTo(refillTower.getLocation()))) rc.move(rc.getLocation().directionTo(refillTower.getLocation()));
+        PathFinder.moveToLocation(rc,refillTower.getLocation());
+//        if(rc.canMove(rc.getLocation().directionTo(refillTower.getLocation()))) rc.move(rc.getLocation().directionTo(refillTower.getLocation()));
 
         //am i there yet?
         if(!rc.canTransferPaint(refillTower.getLocation(),0)){

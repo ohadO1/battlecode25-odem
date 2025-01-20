@@ -77,9 +77,9 @@ public class Mopper extends Globals {
         }
         PathFinder.moveToLocation(rc, towerDestination);
         if (rc.canSendMessage(towerDestination)) {
-          rc.sendMessage(towerDestination, Utils.encodeMessage(MESSAGE_TYPE.buildTowerHere, rc.getLocation()));
+//          rc.sendMessage(towerDestination, Utils.encodeMessage(MESSAGE_TYPE.buildTowerHere, rc.getLocation()));
           if (rc.getPaint() < rc.getType().paintCapacity) {
-            rc.sendMessage(towerDestination, Utils.encodeMessage(MESSAGE_TYPE.askForRefill, rc.getLocation()));
+//            rc.sendMessage(towerDestination, Utils.encodeMessage(MESSAGE_TYPE.askForRefill, rc.getLocation()));
             state = MOPPER_STATE.waitForRefill;
           } else {
             state = MOPPER_STATE.roam;
