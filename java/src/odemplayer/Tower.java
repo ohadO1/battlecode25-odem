@@ -3,6 +3,7 @@ package odemplayer;
 import battlecode.common.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class Tower extends Globals {
 
@@ -18,6 +19,9 @@ public class Tower extends Globals {
   static ArrayList<MapLocation> refillSpots = new ArrayList<>();
   static ArrayList<MapLocation> ruinSpots = new ArrayList<>();
 
+  static int[] unitsCreated = new int[3];
+  static GAME_PHASE gamePhase = GAME_PHASE.early;
+
   private static TOWER_STATE state = TOWER_STATE.normal;
 
   // TODO: dont create units all the time.
@@ -27,14 +31,19 @@ public class Tower extends Globals {
   // TODO: alert units to help build a tower
   public static void runTower(RobotController rc) throws GameActionException {
 
-    GAME_PHASE current_phase = GAME_PHASE.early;  //shouldnt this be a static?
+    if(rc.getRoundNum() > 100) gamePhase = GAME_PHASE.mid;
+    if(rc.getRoundNum() > 300) gamePhase = GAME_PHASE.late;
     RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
 
     switch (state) {
       case TOWER_STATE.normal:
 
-        // build more soldiers
-        attemptCreatingUnits(rc);
+        // apply spawn pattern according to phase.
+        switch(gamePhase) {
+          case GAME_PHASE.early -> earlyGameSpawnPattern(rc, unitsCreated);
+          case GAME_PHASE.mid -> attemptCreatingUnits(rc);
+          case GAME_PHASE.late -> attemptCreatingUnits(rc);
+        }
 
         break;
       //============
@@ -70,7 +79,6 @@ public class Tower extends Globals {
     // === MESSAGES === //
 
     // Read incoming messages
-    // TODO: move to messages module
     Message[] messages = rc.readMessages(-1);
     for (Message m : messages) {
 
@@ -123,8 +131,12 @@ public class Tower extends Globals {
       }
     }
 
+
+    rc.setIndicatorString(Arrays.toString(unitsCreated));
   }
-  //============
+
+
+  /******************************************** METHODS ******************************************/
 
   private static void attemptCreatingUnits(RobotController rc) throws GameActionException {
       Direction dir = directions[rng.nextInt(directions.length)];
@@ -133,17 +145,59 @@ public class Tower extends Globals {
 
       if (robotType <= 1 && rc.canBuildRobot(EARLY_GAME_MAIN_UNIT, nextLocation) && rc.senseRobotAtLocation(nextLocation) == null) {
         rc.buildRobot(EARLY_GAME_MAIN_UNIT, nextLocation);
-        System.out.println("BUILT A SOLDIER");
+        System.out.println("BUILT A " + EARLY_GAME_MAIN_UNIT.name());
+        unitsCreated[EARLY_GAME_MAIN_UNIT.ordinal()]++;
       }
 
       else if (robotType == 2 && rc.canBuildRobot(EARLY_GAME_LAST_UNIT, nextLocation) && rc.senseRobotAtLocation(nextLocation) == null) {
         rc.buildRobot(EARLY_GAME_LAST_UNIT, nextLocation);
-        System.out.println("BUILT A SPLASHER");
+        System.out.println("BUILT A " + EARLY_GAME_LAST_UNIT.name());
+        unitsCreated[EARLY_GAME_LAST_UNIT.ordinal()]++;
       }
 
       else if (robotType == 3 && rc.canBuildRobot(EARLY_GAME_SECONDARY_UNIT, nextLocation) && rc.senseRobotAtLocation(nextLocation) == null) {
         rc.buildRobot(EARLY_GAME_SECONDARY_UNIT, nextLocation);
-        System.out.println("BUILT A MOPPER");
+        System.out.println("BUILT A " + EARLY_GAME_SECONDARY_UNIT.name());
+        unitsCreated[EARLY_GAME_SECONDARY_UNIT.ordinal()]++;
       }
+  }
+
+  private static void attemptCreatingUnits(RobotController rc, UnitType type) throws GameActionException {
+    Direction dir = directions[rng.nextInt(directions.length)];
+    MapLocation nextLocation = rc.getLocation().add(dir);
+
+    if (rc.canBuildRobot(type, nextLocation) && rc.senseRobotAtLocation(nextLocation) == null) {
+      rc.buildRobot(type, nextLocation);
+      System.out.println("BUILT A " + type.name());
+      unitsCreated[type.ordinal()]++;
+    }
+
+  }
+  private static void earlyGameSpawnPattern(RobotController rc, int[] spawnsCount) throws GameActionException {
+
+    //find spawnset according to my type
+    int[] spawnset = {};
+    switch(rc.getType()){
+      case UnitType.LEVEL_ONE_PAINT_TOWER:
+      case UnitType.LEVEL_TWO_PAINT_TOWER:
+      case UnitType.LEVEL_THREE_PAINT_TOWER:
+        spawnset = EARLY_PAINT_SPAWNS;
+        break;
+      case UnitType.LEVEL_ONE_MONEY_TOWER:
+      case UnitType.LEVEL_TWO_MONEY_TOWER:
+      case UnitType.LEVEL_THREE_MONEY_TOWER:
+        spawnset = EARLY_MONEY_SPAWNS;
+        break;
+    }
+
+    //spawn units if need more
+    if(spawnsCount[UnitType.SOLDIER.ordinal()] < spawnset[UnitType.SOLDIER.ordinal()])    attemptCreatingUnits(rc,UnitType.SOLDIER);
+    if(spawnsCount[UnitType.MOPPER.ordinal()]  < spawnset[UnitType.MOPPER.ordinal()])     attemptCreatingUnits(rc,UnitType.MOPPER);
+    if(spawnsCount[UnitType.SPLASHER.ordinal()] < spawnset[UnitType.SPLASHER.ordinal()])  attemptCreatingUnits(rc,UnitType.SPLASHER);
+
+    //spawn extra
+    if(rc.getChips() >= EARLY_CHIPS_THRESHOLD && rc.getPaint() >= EARLY_PAINT_THRESHOLD){
+      attemptCreatingUnits(rc);
+    }
   }
 }

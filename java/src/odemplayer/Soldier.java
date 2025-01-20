@@ -22,7 +22,7 @@ class Soldier extends Globals {
     attack,
   }
 
-  static SOLDIER_STATES state = SOLDIER_STATES.roam;
+  public static SOLDIER_STATES state = SOLDIER_STATES.roam;
   static SOLDIER_STATES statePrev = state;
   static boolean stateChanged = false;
   static int stateChangedRunAt = 0;
@@ -44,7 +44,6 @@ class Soldier extends Globals {
   //task specific vars
   static MapInfo ruinDest = null; //ruin im aiming to build a tower at
 
-  // TODO: make moppers receive message of asking for a refill
   // TODO: attack state
   // TODO: scout direction state
   // TODO: search for enemy towers and call an attack
@@ -93,7 +92,7 @@ class Soldier extends Globals {
         }
         //if didn't find ruin, wander around.
         else {
-          MapLocation nextLoc = Utils.roamGracefullyf(rc);
+          MapLocation nextLoc = Utils.roamCircle(rc);
 
           if (rc.canAttack(nextLoc)) {
             MapInfo nextLocInfo = rc.senseMapInfo(nextLoc);
@@ -113,7 +112,7 @@ class Soldier extends Globals {
       //region build tower
       case SOLDIER_STATES.buildTower:
 
-//        if(stateChanged) System.out.println("starting to build tower at: " + ruinDest.getMapLocation());
+        if(stateChanged) System.out.println("starting to build tower at: " + ruinDest.getMapLocation());
 
         //go to the ruin
         MapLocation targetLocation = ruinDest.getMapLocation();
@@ -153,11 +152,12 @@ class Soldier extends Globals {
         //complete tower building
         towerToBuild = Utils.WhatShouldIBuild(rc,targetLocation);
 //        System.out.println("chose type: " + towerToBuild);
-        if (towerToBuild != null && rc.canCompleteTowerPattern(towerToBuild,targetLocation)) {
+        if (towerToBuild != null) {
 
           //not enough money. go ask tower to save
           if(rc.getChips() < towerToBuild.moneyCost){
-            state = SOLDIER_STATES.notifySaveChips;
+            if(rc.canCompleteTowerPattern(towerToBuild,targetLocation))
+              state = SOLDIER_STATES.notifySaveChips;
           }
           //enough chips. build tower.
           else{
@@ -256,8 +256,8 @@ class Soldier extends Globals {
         if(refillTower == null) System.out.println("still didnt find any tower. state changed run at: " + stateChangedRunAt);
 
         //move
-//        PathFinder.moveToLocation(rc,refillTower.getLocation());
-        if(rc.canMove(rc.getLocation().directionTo(refillTower.getLocation()))) rc.move(rc.getLocation().directionTo(refillTower.getLocation()));
+        PathFinder.moveToLocation(rc,refillTower.getLocation());
+//        if(rc.canMove(rc.getLocation().directionTo(refillTower.getLocation()))) rc.move(rc.getLocation().directionTo(refillTower.getLocation()));
 
         //am i there yet?
         if(!rc.canTransferPaint(refillTower.getLocation(),0)){

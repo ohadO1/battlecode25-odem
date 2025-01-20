@@ -41,6 +41,46 @@ public class Utils extends Globals {
 
     return rc.getLocation().add(dir);
   }
+  /**
+   * moves using pathfinder in a circular manner, the radius increasing with time.
+   * the redius resets on its own if not run for CIRCLE_ROAM_ROUNDS_TO_RESET rounds.
+   * the destination updates when you reach it
+   *
+   * @param rc - RobotController
+   * @return destination - MapLocation
+   */
+  public static MapLocation roamCircle(RobotController rc) throws GameActionException {
+
+    //reset radius if havent used this for a while
+    if(rc.getRoundNum() - circleRoamUpdate > CIRCLE_ROAM_ROUNDS_TO_RESET) {
+      circleRoamRadius = 1;
+      circleRoamdest = rc.getLocation();
+    }
+    circleRoamUpdate = rc.getRoundNum();
+
+    //set new dest
+    if(rc.getLocation().distanceSquaredTo(circleRoamdest) < 2) {
+
+      //increase radius
+      circleRoamRadius++;
+
+      //progress angle
+      int aAdd = (100)/(circleRoamRadius+1)+10;
+      circleRoamAngle = (circleRoamAngle + aAdd) % 360;
+
+      //find dest
+      double x = rc.getLocation().x + circleRoamRadius * Math.cos(circleRoamAngle);
+      double y = rc.getLocation().y + circleRoamRadius * Math.sin(circleRoamAngle);
+      circleRoamdest = new MapLocation((int) x, (int) y);
+    }
+
+    //approach dest
+    PathFinder.moveToLocation(rc,circleRoamdest);
+//    System.out.println(circleRoamdest);
+    rc.setIndicatorDot(circleRoamdest,204,0,204);
+
+    return circleRoamdest;
+  }
 
   /**
    * finds the closest tower (out of the known tower locations)
