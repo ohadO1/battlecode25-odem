@@ -112,7 +112,7 @@ class Soldier extends Globals {
       //region build tower
       case SOLDIER_STATES.buildTower:
 
-//        if(stateChanged) System.out.println("starting to build tower at: " + ruinDest.getMapLocation());
+        if(stateChanged) System.out.println("starting to build tower at: " + ruinDest.getMapLocation());
 
         //go to the ruin
         MapLocation targetLocation = ruinDest.getMapLocation();

@@ -76,6 +76,8 @@ public class Utils extends Globals {
 
     //approach dest
     PathFinder.moveToLocation(rc,circleRoamdest);
+//    System.out.println(circleRoamdest);
+    rc.setIndicatorDot(circleRoamdest,204,0,204);
 
     return circleRoamdest;
   }

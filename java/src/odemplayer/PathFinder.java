@@ -83,14 +83,14 @@ public class PathFinder extends Globals {
       line = createLine(rc.getLocation(), target);
     }
 
-    for (MapLocation loc : line) {
-      rc.setIndicatorDot(loc, 255, 0, 0);
-    }
+//    for (MapLocation loc : line) {
+//      rc.setIndicatorDot(loc, 255, 0, 0);
+//    }
 
     if (!isTracing) {
       Direction dir = rc.getLocation().directionTo(target);
-      rc.setIndicatorDot(rc.getLocation().add(dir), 255, 0, 0);
-      Clock.yield();
+//      rc.setIndicatorDot(rc.getLocation().add(dir), 255, 0, 0);
+//      Clock.yield();
 
       if (rc.canMove(dir)) {
         rc.move(dir);

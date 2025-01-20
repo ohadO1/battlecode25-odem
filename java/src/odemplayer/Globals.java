@@ -1,6 +1,8 @@
 package odemplayer;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 import battlecode.common.Direction;
@@ -80,13 +82,33 @@ public class Globals {
 
  
   static final UnitType DEFUALT_TOWER_TO_BUILD = UnitType.LEVEL_ONE_PAINT_TOWER;
+
+  /*** towers ***/
   static final UnitType EARLY_GAME_MAIN_UNIT = UnitType.SOLDIER;
   static final UnitType EARLY_GAME_SECONDARY_UNIT = UnitType.MOPPER;
   static final UnitType EARLY_GAME_LAST_UNIT = UnitType.SPLASHER;
+  static final int EARLY_CHIPS_THRESHOLD = 1200;
+  static final int EARLY_PAINT_THRESHOLD = 300;
+
+  // at the start of the game, towers will only spawn these units,
+  // and spawn more only if they have over EARLY_CHIPS_THRESHOLD.
+  static final int[] EARLY_PAINT_SPAWNS = {
+          2,  //soldier
+          0,  //splasher
+          0,  //mopper
+  };
+  static final int[] EARLY_MONEY_SPAWNS = {
+          1,  //soldier
+          0,  //splasher
+          1,  //mopper
+  };
+
+  /*** soldier ***/
   static final double SOLDIER_PAINT_FOR_TASK = 0.4;                     // when a soldier fails to refill paint but has above this, he will
   static final double SOLDIER_PAINT_FOR_CASUAL_REFILL = 0.6;                   // when a soldier has under this % and doesnt do anything special hell seek refill.
   static final double SOLDIER_PAINT_FOR_URGENT_REFILL = 0.3;                   // when a soldier has under this % he will stop whatever hes doing and seek refill.
   static final int PAINT_TOWER_SAVING_TURNS = 50;
 
+  /*** utility ***/
   static final int CIRCLE_ROAM_ROUNDS_TO_RESET = 15;    //circle roam will reset its radius if not used after this amount of turns
 }
