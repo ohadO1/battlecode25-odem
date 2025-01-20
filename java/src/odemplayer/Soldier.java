@@ -152,11 +152,12 @@ class Soldier extends Globals {
         //complete tower building
         towerToBuild = Utils.WhatShouldIBuild(rc,targetLocation);
 //        System.out.println("chose type: " + towerToBuild);
-        if (towerToBuild != null && rc.canCompleteTowerPattern(towerToBuild,targetLocation)) {
+        if (towerToBuild != null) {
 
           //not enough money. go ask tower to save
           if(rc.getChips() < towerToBuild.moneyCost){
-            state = SOLDIER_STATES.notifySaveChips;
+            if(rc.canCompleteTowerPattern(towerToBuild,targetLocation))
+              state = SOLDIER_STATES.notifySaveChips;
           }
           //enough chips. build tower.
           else{
