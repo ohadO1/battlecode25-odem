@@ -71,8 +71,13 @@ public class PathFinder extends Globals {
 
   public static void moveToLocation(RobotController rc, MapLocation target) throws GameActionException {
 
-    if (target.distanceSquaredTo(target) <= 2 && rc.senseRobotAtLocation(target) != null) {
-      return;
+    rc.setIndicatorString("test: " + rc.getLocation().distanceSquaredTo(target) + rc.senseRobotAtLocation(target));
+
+    if (rc.getLocation().distanceSquaredTo(target) <= 2) {
+      Direction targetDir = rc.getLocation().directionTo(target);
+      if (!rc.canMove(targetDir)) {
+        return;
+      }
     }
 
     if (!target.equals(prevDest)) {
