@@ -6,6 +6,7 @@ import java.util.Arrays;
 import battlecode.common.*;
 
 public class Utils extends Globals {
+  static boolean printed = false;
 
   // TODO: not efficient enough! fix
   // TODO: add actual logic in WhatShouldIbuild, important function.
@@ -51,35 +52,52 @@ public class Utils extends Globals {
    */
   public static MapLocation roamCircle(RobotController rc) throws GameActionException {
 
-    //reset radius if havent used this for a while
+    //reset if havent used this for a while
     if(rc.getRoundNum() - circleRoamUpdate > CIRCLE_ROAM_ROUNDS_TO_RESET) {
+
+//      if(!printed) {
+//        printed = true;
+//        for (double i = 0; i < 360; i += 10) {
+//          System.out.println("cos(" + i + ") = " + Math.cos(Math.toRadians(i)) + ", sin(" + i + ") = " + Math.sin(Math.toRadians(i)));
+//        }
+//      }
+
       circleRoamRadius = 1;
-      circleRoamdest = rc.getLocation();
+      circleRoamDest = rc.getLocation();
+      circleRoamCenter = circleRoamDest;
     }
     circleRoamUpdate = rc.getRoundNum();
 
     //set new dest
-    if(rc.getLocation().distanceSquaredTo(circleRoamdest) < 2) {
+    if(rc.getLocation().distanceSquaredTo(circleRoamDest) < 2) {
 
-      //increase radius
-      circleRoamRadius++;
+      int quaterPrev = circleRoamAngle/90;
 
       //progress angle
-      int aAdd = (100)/(circleRoamRadius+1)+10;
+      int aAdd = (30)/(circleRoamRadius+1)+10;
       circleRoamAngle = (circleRoamAngle + aAdd) % 360;
 
+      //increase radius
+      if(circleRoamAngle/90 != quaterPrev)
+        circleRoamRadius++;
+
       //find dest
-      double x = rc.getLocation().x + circleRoamRadius * Math.cos(circleRoamAngle);
-      double y = rc.getLocation().y + circleRoamRadius * Math.sin(circleRoamAngle);
-      circleRoamdest = new MapLocation((int) x, (int) y);
+      double x = circleRoamCenter.x + circleRoamRadius * Math.cos(Math.toRadians(circleRoamAngle));
+      double y = circleRoamCenter.y + circleRoamRadius * Math.sin(Math.toRadians(circleRoamAngle));
+      x = Math.clamp((int)x,0,rc.getMapWidth());
+      y = Math.clamp((int)y,0,rc.getMapWidth());
+      circleRoamDest = new MapLocation((int) x, (int) y);
+      System.out.println("-- circle: chose " + circleRoamDest + ", center: " + circleRoamCenter + ", r: " + circleRoamRadius + ", a: " + circleRoamAngle);
     }
 
     //approach dest
-    PathFinder.moveToLocation(rc,circleRoamdest);
-//    System.out.println(circleRoamdest);
-    rc.setIndicatorDot(circleRoamdest,204,0,204);
+    PathFinder.moveToLocation(rc, circleRoamDest);
+//  if(rc.canMove(rc.getLocation().directionTo(circleRoamDest))) rc.move(rc.getLocation().directionTo(circleRoamDest));
 
-    return circleRoamdest;
+//    System.out.println(circleRoamdest);
+    rc.setIndicatorDot(circleRoamDest,204,0,204);
+
+    return circleRoamDest;
   }
 
   /**
@@ -178,8 +196,8 @@ public class Utils extends Globals {
       break;
     }
 
-    System.out.println("location message encoded: " + ret);
-    DecodedMessage msg = new DecodedMessage(ret);
+//    System.out.println("location message encoded: " + ret);
+//    DecodedMessage msg = new DecodedMessage(ret);
 
     return ret;
   }
@@ -192,7 +210,7 @@ public class Utils extends Globals {
         break;
     }
 
-    System.out.println("int message encoded: " + ret);
+//    System.out.println("int message encoded: " + ret);
 
     return ret;
   }

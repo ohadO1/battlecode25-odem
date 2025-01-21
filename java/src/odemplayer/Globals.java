@@ -1,8 +1,6 @@
 package odemplayer;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Random;
 
 import battlecode.common.Direction;
@@ -74,9 +72,10 @@ public class Globals {
   /********************** UTILITY VARIABLES *****************/
 
   static int circleRoamRadius = 0;
-  static int circleRoamUpdate = 0;
+  static int circleRoamUpdate = -100;
   static int circleRoamAngle = 0;
-  static MapLocation circleRoamdest  = new MapLocation(0,0);
+  static MapLocation circleRoamCenter = new MapLocation(0,0);
+  static MapLocation circleRoamDest = new MapLocation(0,0);
 
   /********************** STARTEGY **************************/
 
@@ -105,8 +104,8 @@ public class Globals {
 
   /*** soldier ***/
   static final double SOLDIER_PAINT_FOR_TASK = 0.4;                     // when a soldier fails to refill paint but has above this, he will
-  static final double SOLDIER_PAINT_FOR_CASUAL_REFILL = 0.6;                   // when a soldier has under this % and doesnt do anything special hell seek refill.
-  static final double SOLDIER_PAINT_FOR_URGENT_REFILL = 0.3;                   // when a soldier has under this % he will stop whatever hes doing and seek refill.
+  static final double SOLDIER_PAINT_FOR_CASUAL_REFILL = 0.4;                   // when a soldier has under this % and doesnt do anything special hell seek refill.
+  static final double SOLDIER_PAINT_FOR_URGENT_REFILL = 0.25;                   // when a soldier has under this % he will stop whatever hes doing and seek refill.
   static final int PAINT_TOWER_SAVING_TURNS = 50;
 
   /*** utility ***/

@@ -65,9 +65,12 @@ class Soldier extends Globals {
         if(stateChanged){
           ruinDest = null;
           notifyDest = null;
+          refillTower = null;
+          askToSaveDest = null;
         }
 
         //search for the closest ruin in range
+        ruinDest = null;
         MapInfo[] nearbyTiles = rc.senseNearbyMapInfos();
         int currentDistance = 99999;
         for (MapInfo tile : nearbyTiles) {
@@ -76,7 +79,7 @@ class Soldier extends Globals {
             if (distance < currentDistance) {
               ruinDest = tile;
               currentDistance = distance;
-//              System.out.println("found ruin at: " + ruinDest.getMapLocation() + ", robot at location: " + rc.senseRobotAtLocation(tile.getMapLocation()));
+              System.out.println("found ruin at: " + ruinDest.getMapLocation() + ", robot at location: " + rc.senseRobotAtLocation(tile.getMapLocation()));
             }
           }
         }
@@ -123,6 +126,7 @@ class Soldier extends Globals {
         if(rc.canSenseLocation(targetLocation) && rc.senseRobotAtLocation(targetLocation) != null){
           task = null;
           state = SOLDIER_STATES.roam;
+          break;
         }
 
         //try to mark
@@ -151,19 +155,18 @@ class Soldier extends Globals {
 
         //complete tower building
         towerToBuild = Utils.WhatShouldIBuild(rc,targetLocation);
-//        System.out.println("chose type: " + towerToBuild);
         if (towerToBuild != null) {
 
           //not enough money. go ask tower to save
           if(rc.getChips() < towerToBuild.moneyCost){
-            if(rc.canCompleteTowerPattern(towerToBuild,targetLocation))
               state = SOLDIER_STATES.notifySaveChips;
           }
           //enough chips. build tower.
-          else{
+          else if(rc.canCompleteTowerPattern(towerToBuild,targetLocation)){
             rc.completeTowerPattern(towerToBuild, targetLocation);
             state = SOLDIER_STATES.roam;
           }
+
         }
 
         break;
@@ -196,6 +199,12 @@ class Soldier extends Globals {
       //region notify to save chips
       case SOLDIER_STATES.notifySaveChips:
 
+        //someone else built it
+        if(rc.canSenseLocation(ruinDest.getMapLocation()) && rc.senseRobotAtLocation(ruinDest.getMapLocation()) != null){
+          task = null;
+          state = SOLDIER_STATES.roam;
+        }
+
         //find tower to ask to save chips
         if(stateChanged){
 
@@ -218,7 +227,7 @@ class Soldier extends Globals {
         //send message
         if(rc.canSendMessage(askToSaveDest)){
 
-          System.out.println("asking tower to save " + towerToBuild.moneyCost);
+//          System.out.println("asking tower to save " + towerToBuild.moneyCost);
           rc.sendMessage(askToSaveDest,Utils.encodeMessage(MESSAGE_TYPE.saveChips,towerToBuild.moneyCost));
 
           //ask for a refill
