@@ -85,8 +85,8 @@ public class Utils extends Globals {
       //find dest
       double x = circleRoamCenter.x + circleRoamRadius * Math.cos(Math.toRadians(circleRoamAngle));
       double y = circleRoamCenter.y + circleRoamRadius * Math.sin(Math.toRadians(circleRoamAngle));
-      x = Math.clamp((int)x,0,rc.getMapWidth());
-      y = Math.clamp((int)y,0,rc.getMapWidth());
+      x = Math.clamp((int)x,0,rc.getMapWidth()-1);
+      y = Math.clamp((int)y,0,rc.getMapWidth()-1);
       circleRoamDest = new MapLocation((int) x, (int) y);
 //      System.out.println("-- circle: chose " + circleRoamDest + ", center: " + circleRoamCenter + ", r: " + circleRoamRadius + ", a: " + circleRoamAngle);
     }
