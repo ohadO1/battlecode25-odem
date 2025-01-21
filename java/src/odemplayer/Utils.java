@@ -166,6 +166,39 @@ public class Utils extends Globals {
     if(ret == null) System.out.println("asked to find closest tower and returned null.");
     return ret;
   }
+  public static MapLocation mopperRoam(RobotController rc) throws GameActionException {
+    MapLocation unitLocation = rc.getLocation();
+
+    MapInfo[] nearbyTiles = rc.senseNearbyMapInfos(2);
+
+    if (!rc.senseMapInfo(rc.getLocation()).getPaint().isAlly()) {
+      MapLocation closestTower = findClosestTower(knownTowersInfos, rc);
+      PathFinder.moveToLocation(rc, closestTower);
+      return null;
+    }
+
+    for (MapInfo tile : nearbyTiles) {
+      if (tile.isWall()) {
+        MapLocation wallLocation = tile.getMapLocation();
+        Direction dir = rc.getLocation().directionTo(wallLocation).opposite();
+        if (rc.canMove(dir)) {
+
+          rc.setIndicatorDot(rc.getLocation(), 0, 0, 255);
+          rc.move(dir);
+          return rc.getLocation().add(dir);
+        }
+        return null;
+      }
+    }
+
+    Direction dir = directions[rng.nextInt(directions.length)];
+
+    if (rc.canMove(dir)) {
+      rc.move(dir);
+    }
+
+    return rc.getLocation().add(dir);
+  }
 
   /****************** decision making functions ****************************/
 

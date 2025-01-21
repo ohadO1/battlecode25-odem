@@ -137,4 +137,7 @@ public class Globals {
   /*** utility ***/
   static final int CIRCLE_ROAM_ROUNDS_TO_RESET = 15;    //circle roam will reset its radius if not used after this amount of turns
   static final int CIRCLE_ROAM_MAX_RADIUS = 30;
+
+  /*** mopper ***/
+  static final double MOPPER_PAINT_FOR_CASUAL_REFILL = 0.3;
 }
