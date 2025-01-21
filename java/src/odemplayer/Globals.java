@@ -130,8 +130,11 @@ public class Globals {
   static final double SOLDIER_PAINT_FOR_TASK = 0.4;                     // when a soldier fails to refill paint but has above this, he will
   static final double SOLDIER_PAINT_FOR_CASUAL_REFILL = 0.4;                   // when a soldier has under this % and doesnt do anything special hell seek refill.
   static final double SOLDIER_PAINT_FOR_URGENT_REFILL = 0.25;                   // when a soldier has under this % he will stop whatever hes doing and seek refill.
-  static final int PAINT_TOWER_SAVING_TURNS = 50;
+  static final int ALLIES_FOR_ATTACK_EARLY = 2; //init an attack only where there are this many friendly soldiers\splashers around, in early game.
+  static final int ALLIES_FOR_ATTACK_MID   = 3; //init an attack only where there are this many friendly soldiers\splashers around, in mid game.
+  static final int ALLIES_FOR_ATTACK_LATE = 4;  //init an attack only where there are this many friendly soldiers\splashers around, in late game.
 
   /*** utility ***/
   static final int CIRCLE_ROAM_ROUNDS_TO_RESET = 15;    //circle roam will reset its radius if not used after this amount of turns
+  static final int CIRCLE_ROAM_MAX_RADIUS = 30;
 }

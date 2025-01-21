@@ -70,7 +70,7 @@ public class Utils extends Globals {
     circleRoamUpdate = rc.getRoundNum();
 
     //set new dest
-    if(rc.getLocation().distanceSquaredTo(circleRoamDest) < 2) {
+    while(rc.getLocation().distanceSquaredTo(circleRoamDest) < 2 || !withinBounds(rc,circleRoamDest)) {
 
       int quaterPrev = circleRoamAngle/90;
 
@@ -80,7 +80,7 @@ public class Utils extends Globals {
 
       //increase radius
       if(circleRoamAngle/90 != quaterPrev)
-        circleRoamRadius++;
+        circleRoamRadius = (circleRoamRadius+1)%CIRCLE_ROAM_MAX_RADIUS;
 
       //find dest
       double x = circleRoamCenter.x + circleRoamRadius * Math.cos(Math.toRadians(circleRoamAngle));
@@ -97,6 +97,12 @@ public class Utils extends Globals {
     rc.setIndicatorDot(circleRoamDest,204,0,204);
 
     return circleRoamDest;
+  }
+  public static boolean withinBounds(RobotController rc,MapLocation pos){
+    if(pos.x < 0) return false;
+    if(pos.y < 0) return false;
+    if(pos.x >= rc.getMapWidth()) return false;
+    return pos.y < rc.getMapHeight();
   }
 
   /**
