@@ -23,10 +23,12 @@ public class Mopper extends Globals {
 
   private enum MOPPER_STATE {
     transferPaint,
+    // im removing this for now (commenting out), moppers are inside the painted
+    // territory anyway
     notifyTower,
     roam,
-    saving,
-    attack,
+    attackEnemy,
+    attackTile,
     refillAlly,
     enemyDetected
   }
@@ -40,6 +42,8 @@ public class Mopper extends Globals {
   }
 
   private static MOPPER_ROLES role = MOPPER_ROLES.normal;
+  private static MapLocation tileToAttack = null;
+  private static MapLocation ruinDest = null;
   private static MOPPER_STATE state = MOPPER_STATE.roam;
   static MOPPER_STATE statePrev = state;
   private static MapLocation towerDestination = null;
@@ -54,6 +58,7 @@ public class Mopper extends Globals {
     // contantly
     // TODO: add check if task != null
 
+    // mopswing enemies - move to state
     for (MapInfo tile : rc.senseNearbyMapInfos()) {
       RobotInfo potentialEnemy = rc.senseRobotAtLocation(tile.getMapLocation());
       if (potentialEnemy != null && (potentialEnemy.team != rc.getTeam())) {
@@ -61,12 +66,17 @@ public class Mopper extends Globals {
           rc.mopSwing(rc.getLocation().directionTo(potentialEnemy.getLocation()));
         }
       }
+      if (tileToAttack == null && tile.getPaint().isEnemy()) {
+        state = MOPPER_STATE.attackTile;
+        tileToAttack = tile.getMapLocation();
+      }
     }
 
     // transfer paint
     if (allyToRefill == null) {
       for (RobotInfo robot : rc.senseNearbyRobots()) {
-        if (robot.getType() == UnitType.SOLDIER || robot.getType() == UnitType.SPLASHER && robot.team == rc.getTeam()) {
+        if ((robot.getType() == UnitType.SOLDIER || robot.getType() == UnitType.SPLASHER
+            || robot.getType() == UnitType.MOPPER) && robot.team == rc.getTeam()) {
           if (((double) robot.getPaintAmount()) / robot.getType().paintCapacity <= 0.3 || rc.getPaint() <= 30) {
             state = MOPPER_STATE.refillAlly;
             allyToRefill = robot;
@@ -77,34 +87,14 @@ public class Mopper extends Globals {
 
     switch (state) {
       case roam:
-
         // remain only in our tiles
         Utils.mopperRoam(rc);
 
-        rc.setIndicatorString("in roam");
-        Utils.roamGracefullyf(rc);
-        // find out more about attcks
-        // mopperAttack(rc, nextLoc);
-        if (checkNearbyRuins(rc) && knownTowersInfos.size() > 0) {
-          state = MOPPER_STATE.notifyTower;
-          towerDestination = Utils.findClosestTower(knownTowersInfos, rc);
-          PathFinder.moveToLocation(rc, towerDestination);
-          if (towerDestination != null) {
-            state = MOPPER_STATE.notifyTower;
-          }
-        }
-        break;
-      // case messenger:
-      case notifyTower:
-        if (towerDestination == null) {
-          state = MOPPER_STATE.roam;
-          break;
-        }
-        PathFinder.moveToLocation(rc, towerDestination);
-        if (rc.canSendMessage(towerDestination)) {
-          state = MOPPER_STATE.roam;
-        }
-
+        // if (ruinDest != null && knownTowersInfos.size() > 0) {
+        // ruinDest = checkNearbyRuins(rc);
+        // state = MOPPER_STATE.notifyTower;
+        // towerDestination = Utils.findClosestTower(knownTowersInfos, rc);
+        // }
         break;
 
       case refillAlly:
@@ -123,15 +113,15 @@ public class Mopper extends Globals {
         mopperAttack(rc, rc.getLocation());
         state = MOPPER_STATE.roam;
         break;
-      case saving:
-        MapLocation destination = Utils.findClosestTower(knownTowersInfos, rc);
-        PathFinder.moveToLocation(rc, destination);
-        boolean didUpdateTowerToSave = Utils.updateFriendlyTowers(rc);
-        // // NOTE: for debugging, remove when submitting
-        rc.setIndicatorDot(rc.getLocation(), 0, 255, 0);
-        if (didUpdateTowerToSave) {
-          state = MOPPER_STATE.notifyTower;
+
+      case attackTile:
+        rc.setIndicatorString("attackTile");
+        if (!rc.canAttack(tileToAttack)) {
+          PathFinder.moveToLocation(rc, tileToAttack);
         }
+        rc.attack(tileToAttack);
+        tileToAttack = null;
+        state = MOPPER_STATE.roam;
         break;
 
       default:
@@ -152,7 +142,7 @@ public class Mopper extends Globals {
 
   }
 
-  public static boolean checkNearbyRuins(RobotController rc) throws GameActionException {
+  public static MapLocation checkNearbyRuins(RobotController rc) throws GameActionException {
     MapInfo[] nearbyTiles = rc.senseNearbyMapInfos();
 
     for (MapInfo tile : nearbyTiles) {
@@ -172,9 +162,9 @@ public class Mopper extends Globals {
       }
 
       // found not occupied ruin
-      return true;
+      return tile.getMapLocation();
     }
-    return false;
+    return null;
   }
 
   public static void determineMopperRole(RobotController rc) {

@@ -167,9 +167,9 @@ public class Utils extends Globals {
     return ret;
   }
   public static MapLocation mopperRoam(RobotController rc) throws GameActionException {
-    MapLocation unitLocation = rc.getLocation();
 
-    MapInfo[] nearbyTiles = rc.senseNearbyMapInfos(2);
+
+    MapInfo[] nearbyTiles = rc.senseNearbyMapInfos(-1);
 
     if (!rc.senseMapInfo(rc.getLocation()).getPaint().isAlly()) {
       MapLocation closestTower = findClosestTower(knownTowersInfos, rc);
