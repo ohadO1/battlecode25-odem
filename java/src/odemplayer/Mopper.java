@@ -28,10 +28,11 @@ public class Mopper extends Globals {
     saving,
     attack,
     refillAlly,
-    waitForRefill,
     enemyDetected
   }
+
   static MOPPER_TASKS task = null;
+
   enum MOPPER_TASKS {
     transferPaint,
     attack,
@@ -43,21 +44,45 @@ public class Mopper extends Globals {
   static MOPPER_STATE statePrev = state;
   private static MapLocation towerDestination = null;
   static boolean stateChanged = false;
-  static MapLocation allyToRefill = null;
+  static RobotInfo allyToRefill = null;
   static int refillWait = 0;
+  static RobotInfo refillTower;
 
   public static void runMopper(RobotController rc) throws GameActionException {
     Utils.updateFriendlyTowers(rc);
     // TODO: add a role that will support soldiers and refill them from tower
     // contantly
-    //TODO: add check if task != null
-    
+    // TODO: add check if task != null
+
+    for (MapInfo tile : rc.senseNearbyMapInfos()) {
+      RobotInfo potentialEnemy = rc.senseRobotAtLocation(tile.getMapLocation());
+      if (potentialEnemy != null && (potentialEnemy.team != rc.getTeam())) {
+        if (rc.canMopSwing(rc.getLocation().directionTo(potentialEnemy.getLocation()))) {
+          rc.mopSwing(rc.getLocation().directionTo(potentialEnemy.getLocation()));
+        }
+      }
+    }
+
+    // transfer paint
+    if (allyToRefill == null) {
+      for (RobotInfo robot : rc.senseNearbyRobots()) {
+        if (robot.getType() == UnitType.SOLDIER || robot.getType() == UnitType.SPLASHER && robot.team == rc.getTeam()) {
+          if (((double) robot.getPaintAmount()) / robot.getType().paintCapacity <= 0.3 || rc.getPaint() <= 30) {
+            state = MOPPER_STATE.refillAlly;
+            allyToRefill = robot;
+          }
+        }
+      }
+    }
 
     switch (state) {
       case roam:
-        MapLocation nextLoc = Utils.roamGracefullyf(rc);
-        mopperAttack(rc, nextLoc);
 
+        // remain only in our tiles
+        Utils.mopperRoam(rc);
+
+        rc.setIndicatorString("in roam");
+        Utils.roamGracefullyf(rc);
         // find out more about attcks
         // mopperAttack(rc, nextLoc);
         if (checkNearbyRuins(rc) && knownTowersInfos.size() > 0) {
@@ -77,34 +102,23 @@ public class Mopper extends Globals {
         }
         PathFinder.moveToLocation(rc, towerDestination);
         if (rc.canSendMessage(towerDestination)) {
-//          rc.sendMessage(towerDestination, Utils.encodeMessage(MESSAGE_TYPE.buildTowerHere, rc.getLocation()));
-          if (rc.getPaint() < rc.getType().paintCapacity) {
-//            rc.sendMessage(towerDestination, Utils.encodeMessage(MESSAGE_TYPE.askForRefill, rc.getLocation()));
-            state = MOPPER_STATE.waitForRefill;
-          } else {
-            state = MOPPER_STATE.roam;
-          }
-        }        
+          state = MOPPER_STATE.roam;
+        }
 
         break;
-      case waitForRefill:
-      //TODO: update to the new version of refill Itay is working on
-        if(stateChanged) refillWait = 0;
-        refillWait++;
-        if(refillWait%10 == 0) rc.setIndicatorString("waiting for refill for " + refillWait + " turns.");
-        break;
-      
+
       case refillAlly:
-        if (allyToRefill == null) {
+        rc.setIndicatorString("in refillAlly");
+        int numToTransfer = rc.getPaint() > 60 ? 50 : rc.getPaint();
+        if (rc.canTransferPaint(allyToRefill.location, numToTransfer)) {
+          rc.transferPaint(allyToRefill.getLocation(), numToTransfer);
+          allyToRefill = null;
           state = MOPPER_STATE.roam;
-          break;
-        }
-        PathFinder.moveToLocation(rc, allyToRefill);
-        if (rc.canTransferPaint(allyToRefill,  rc.getType().paintCapacity - rc.getPaint())) { //to fix because it can communicate with other robots
-          rc.transferPaint(allyToRefill,  rc.getType().paintCapacity - rc.getPaint()); // to fix too
-          state = MOPPER_STATE.roam;
+        } else {
+          PathFinder.moveToLocation(rc, allyToRefill.getLocation());
         }
         break;
+
       case enemyDetected:
         mopperAttack(rc, rc.getLocation());
         state = MOPPER_STATE.roam;
@@ -118,8 +132,10 @@ public class Mopper extends Globals {
         if (didUpdateTowerToSave) {
           state = MOPPER_STATE.notifyTower;
         }
+        break;
 
       default:
+        break;
     }
   }
 

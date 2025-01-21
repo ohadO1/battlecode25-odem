@@ -1,6 +1,7 @@
 package odemplayer;
 
 import battlecode.common.*;
+
 public class RobotPlayer extends Globals {
 
   // TODO: handle attacking enemy units
