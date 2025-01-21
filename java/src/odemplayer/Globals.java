@@ -79,8 +79,12 @@ public class Globals {
 
   /********************** STARTEGY **************************/
 
- 
+
+  /********* general *********/
   static final UnitType DEFUALT_TOWER_TO_BUILD = UnitType.LEVEL_ONE_PAINT_TOWER;
+  static final int EARLY_GAME_END = 100;
+  static final int MID_GAME_END = 200;
+  static final int LATE_GAME_END = 300;
 
   /*** towers ***/
   static final UnitType EARLY_GAME_MAIN_UNIT = UnitType.SOLDIER;

@@ -92,7 +92,6 @@ public class Utils extends Globals {
 
     //approach dest
     PathFinder.moveToLocation(rc, circleRoamDest);
-//  if(rc.canMove(rc.getLocation().directionTo(circleRoamDest))) rc.move(rc.getLocation().directionTo(circleRoamDest));
 
 //    System.out.println(circleRoamdest);
     rc.setIndicatorDot(circleRoamDest,204,0,204);
@@ -162,8 +161,11 @@ public class Utils extends Globals {
     return ret;
   }
 
-  //decision making functions
+  /****************** decision making functions ****************************/
+
   public static UnitType WhatShouldIBuild(RobotController rc, MapLocation location){
+
+
 
     UnitType choice = DEFUALT_TOWER_TO_BUILD;
     if(rc.canBuildRobot(choice,location))
@@ -214,7 +216,6 @@ public class Utils extends Globals {
 
     return ret;
   }
-
 
 
   // TODO: send encoded message and parse

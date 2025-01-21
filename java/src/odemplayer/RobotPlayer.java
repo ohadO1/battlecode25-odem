@@ -8,6 +8,8 @@ public class RobotPlayer extends Globals {
 
     UnitType unitType = rc.getType();
 
+
+
     // initializers. will execute in the beginning of the method. use to set roles,
     // etc
     switch (unitType) {
