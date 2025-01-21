@@ -70,7 +70,7 @@ public class Utils extends Globals {
     circleRoamUpdate = rc.getRoundNum();
 
     //set new dest
-    while(rc.getLocation().distanceSquaredTo(circleRoamDest) < 2 || !withinBounds(rc,circleRoamDest)) {
+    while(circleRoamDest == null || rc.getLocation().distanceSquaredTo(circleRoamDest) < 2 || !withinBounds(rc,circleRoamDest)) {
 
       int quaterPrev = circleRoamAngle/90;
 
@@ -89,6 +89,9 @@ public class Utils extends Globals {
       y = Math.clamp((int)y,0,rc.getMapWidth()-1);
       circleRoamDest = new MapLocation((int) x, (int) y);
 //      System.out.println("-- circle: chose " + circleRoamDest + ", center: " + circleRoamCenter + ", r: " + circleRoamRadius + ", a: " + circleRoamAngle);
+
+      //cancel if i know its unreachable
+      if(rc.canSenseLocation(circleRoamDest) && rc.senseRobotAtLocation(circleRoamDest) != null) circleRoamDest = null;
     }
 
     //approach dest
@@ -167,9 +170,9 @@ public class Utils extends Globals {
     return ret;
   }
   public static MapLocation mopperRoam(RobotController rc) throws GameActionException {
+    MapLocation unitLocation = rc.getLocation();
 
-
-    MapInfo[] nearbyTiles = rc.senseNearbyMapInfos(-1);
+    MapInfo[] nearbyTiles = rc.senseNearbyMapInfos(2);
 
     if (!rc.senseMapInfo(rc.getLocation()).getPaint().isAlly()) {
       MapLocation closestTower = findClosestTower(knownTowersInfos, rc);
@@ -204,9 +207,18 @@ public class Utils extends Globals {
 
   public static UnitType WhatShouldIBuild(RobotController rc, MapLocation location, GAME_PHASE phase){
 
+    //dont build defense in early game
+    if(phase == GAME_PHASE.early) for(int i=0; i < idealTowerOrder.size(); i++){
+      System.out.println("early game tower choice");
+      if(idealTowerOrder.get(i) != UnitType.LEVEL_ONE_DEFENSE_TOWER)
+        return idealTowerOrder.get(i);
+    }
+
+    //build whatever's in queue
     if(!idealTowerOrder.isEmpty())
       return idealTowerOrder.getFirst();
 
+    //queue is over (dafuq?) roll.
     return Arrays.asList(UnitType.LEVEL_ONE_DEFENSE_TOWER,UnitType.LEVEL_ONE_MONEY_TOWER,UnitType.LEVEL_ONE_PAINT_TOWER).get(rng.nextInt(3));
 
 //    UnitType choice = DEFUALT_TOWER_TO_BUILD;
@@ -219,6 +231,27 @@ public class Utils extends Globals {
     //if i have enough paint and tower is far do it
 
     return true;
+  }
+  public static boolean shouldIAttackTower(RobotController rc, RobotInfo tower, GAME_PHASE gamePhase) throws GameActionException {
+
+    //if tower is in critical hp just go get it
+    if(tower.getHealth() <= TOWER_CRITICAL_HP) return true;
+
+    //find friends
+    RobotInfo[] friends = rc.senseNearbyRobots(tower.getLocation(),-1,rc.getTeam());
+    int count = 1;  //im my own best friend
+    for(RobotInfo robot : friends){
+      if(robot.getType() == UnitType.SOLDIER || robot.getType() == UnitType.SPLASHER)
+        count++;
+    }
+
+    switch(gamePhase){
+      case GAME_PHASE.early:  return count >= ALLIES_FOR_ATTACK_EARLY;
+      case GAME_PHASE.mid:    return count >= ALLIES_FOR_ATTACK_MID;
+      case GAME_PHASE.late:   return count >= ALLIES_FOR_ATTACK_LATE;
+    }
+
+    return false;
   }
 
   /*

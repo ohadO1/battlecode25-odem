@@ -126,7 +126,7 @@ public class Tower extends Globals {
     //send moppers to refill soldiers and splashers
     if(!refillSpots.isEmpty()){
       for(RobotInfo robot : nearbyRobots){
-        if(robot.getTeam() == rc.getTeam() && robot.type == UnitType.MOPPER){
+        if(robot.getTeam() == rc.getTeam() && robot.type == UnitType.MOPPER && rc.canSenseLocation(robot.getLocation())){
           int msg = Utils.encodeMessage(MESSAGE_TYPE.askForRefill,refillSpots.removeFirst());
           rc.sendMessage(robot.getLocation(),msg);
         }
@@ -178,7 +178,7 @@ public class Tower extends Globals {
   private static void earlyGameSpawnPattern(RobotController rc, int[] spawnsCount) throws GameActionException {
 
     //find spawnset according to my type
-    int[] spawnset = {};
+    int[] spawnset = EARLY_PAINT_SPAWNS;
     switch(rc.getType()){
       case UnitType.LEVEL_ONE_PAINT_TOWER:
       case UnitType.LEVEL_TWO_PAINT_TOWER:
@@ -190,6 +190,8 @@ public class Tower extends Globals {
       case UnitType.LEVEL_THREE_MONEY_TOWER:
         spawnset = EARLY_MONEY_SPAWNS;
         break;
+      default:
+        spawnset = EARLY_DEFENSE_SPAWNS;
     }
 
     //spawn units if need more
