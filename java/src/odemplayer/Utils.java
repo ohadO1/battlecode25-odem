@@ -70,7 +70,7 @@ public class Utils extends Globals {
     circleRoamUpdate = rc.getRoundNum();
 
     //set new dest
-    while(rc.getLocation().distanceSquaredTo(circleRoamDest) < 2 || !withinBounds(rc,circleRoamDest)) {
+    while(circleRoamDest == null || rc.getLocation().distanceSquaredTo(circleRoamDest) < 2 || !withinBounds(rc,circleRoamDest)) {
 
       int quaterPrev = circleRoamAngle/90;
 
@@ -89,6 +89,9 @@ public class Utils extends Globals {
       y = Math.clamp((int)y,0,rc.getMapWidth()-1);
       circleRoamDest = new MapLocation((int) x, (int) y);
 //      System.out.println("-- circle: chose " + circleRoamDest + ", center: " + circleRoamCenter + ", r: " + circleRoamRadius + ", a: " + circleRoamAngle);
+
+      //cancel if i know its unreachable
+      if(rc.canSenseLocation(circleRoamDest) && rc.senseRobotAtLocation(circleRoamDest) != null) circleRoamDest = null;
     }
 
     //approach dest
@@ -219,6 +222,27 @@ public class Utils extends Globals {
     //if i have enough paint and tower is far do it
 
     return true;
+  }
+  public static boolean shouldIAttackTower(RobotController rc, RobotInfo tower, GAME_PHASE gamePhase) throws GameActionException {
+
+    //if tower is in critical hp just go get it
+    if(tower.getHealth() <= TOWER_CRITICAL_HP) return true;
+
+    //find friends
+    RobotInfo[] friends = rc.senseNearbyRobots(tower.getLocation(),-1,rc.getTeam());
+    int count = 1;  //im my own best friend
+    for(RobotInfo robot : friends){
+      if(robot.getType() == UnitType.SOLDIER || robot.getType() == UnitType.SPLASHER)
+        count++;
+    }
+
+    switch(gamePhase){
+      case GAME_PHASE.early:  return count >= ALLIES_FOR_ATTACK_EARLY;
+      case GAME_PHASE.mid:    return count >= ALLIES_FOR_ATTACK_MID;
+      case GAME_PHASE.late:   return count >= ALLIES_FOR_ATTACK_LATE;
+    }
+
+    return false;
   }
 
   /*

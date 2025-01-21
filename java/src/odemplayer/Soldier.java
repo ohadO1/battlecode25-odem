@@ -46,12 +46,13 @@ class Soldier extends Globals {
 
   //task specific vars
   static MapInfo ruinDest = null; //ruin im aiming to build a tower at
+  static RobotInfo towerTarget = null; //tower im aiming to ruin
 
   // TODO: attack state
   // TODO: scout direction state
   // TODO: search for enemy towers and call an attack
   // TODO: if notified tower about a ruin, consider also asking it to save money for building that tower.
-  // TODO: abort seek refill if no longer needed
+  // TODO: stop building tower if pattern is done and someone else is on it
 
   public static void runSoldier(RobotController rc) throws GameActionException {
 
@@ -77,17 +78,20 @@ class Soldier extends Globals {
             break;
           }
 
-          ruinDest = null;
           notifyDest = null;
           refillTower = null;
           askToSaveDest = null;
         }
 
-        //search for the closest ruin in range
+        //look for ruins and enemy towers
         ruinDest = null;
+        towerTarget = null;
         MapInfo[] nearbyTiles = rc.senseNearbyMapInfos();
         int currentDistance = 99999;
+        int towerDistance = 99999;
         for (MapInfo tile : nearbyTiles) {
+
+          //detect ruins
           if (tile.hasRuin() && rc.senseRobotAtLocation(tile.getMapLocation()) == null) {
             int distance = tile.getMapLocation().distanceSquaredTo(rc.getLocation());
             if (distance < currentDistance) {
@@ -95,6 +99,14 @@ class Soldier extends Globals {
               currentDistance = distance;
               System.out.println("found ruin at: " + ruinDest.getMapLocation() + ", robot at location: " + rc.senseRobotAtLocation(tile.getMapLocation()));
             }
+          }
+
+          //detect tower
+          RobotInfo robot = rc.senseRobotAtLocation(tile.getMapLocation());
+          if(robot != null && robot.getType().isTowerType() && robot.getTeam() != rc.getTeam()
+                  && rc.getLocation().distanceSquaredTo(robot.getLocation()) < towerDistance){
+            towerDistance = rc.getLocation().distanceSquaredTo(robot.getLocation());
+            towerTarget = robot;
           }
         }
 
@@ -106,6 +118,13 @@ class Soldier extends Globals {
             state = SOLDIER_STATES.notifyTower;
 
           task = SOLDIER_TASKS.buildTower;
+        }
+        //if found enemy tower, decide what to do. (has priority over the above ruin)
+        if(towerTarget != null){
+          if(Utils.shouldIAttackTower(rc,towerTarget,gamePhase)){
+            task = SOLDIER_TASKS.attack;
+            state = SOLDIER_STATES.attack;
+          }
         }
         //if didn't find ruin, wander around.
         else {
@@ -256,7 +275,7 @@ class Soldier extends Globals {
       case SOLDIER_STATES.seekRefill:
 
         //abort
-        if((double)rc.getPaint()/rc.getType().paintCapacity > SOLDIER_PAINT_FOR_URGENT_REFILL)
+        if((double)rc.getPaint()/rc.getType().paintCapacity > SOLDIER_PAINT_FOR_CASUAL_REFILL)
           state = SOLDIER_STATES.roam;
 
         int missingPaint = rc.getType().paintCapacity - rc.getPaint();
@@ -289,6 +308,30 @@ class Soldier extends Globals {
             rc.transferPaint(refillTower.getLocation(),-missingPaint);
             state = SOLDIER_STATES.roam;
           }
+        }
+
+      break;
+      //endregion
+      //region Description
+      case SOLDIER_STATES.attack:
+
+        MapLocation target = towerTarget.getLocation();
+
+        //approach tower if cant attack
+        if(rc.getLocation().distanceSquaredTo(target) >= 3)
+          PathFinder.moveToLocation(rc,target);
+
+        //attack
+        if(rc.canAttack(target))
+          rc.attack(target);
+
+        //should i give up at some point?
+
+        //done
+        if(towerTarget.getHealth() <= 0 || (rc.canSenseLocation(target) && rc.senseRobotAtLocation(target) == null))
+        {
+          task = null;
+          state = SOLDIER_STATES.roam;
         }
 
       break;
