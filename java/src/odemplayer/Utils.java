@@ -207,9 +207,18 @@ public class Utils extends Globals {
 
   public static UnitType WhatShouldIBuild(RobotController rc, MapLocation location, GAME_PHASE phase){
 
+    //dont build defense in early game
+    if(phase == GAME_PHASE.early) for(int i=0; i < idealTowerOrder.size(); i++){
+      System.out.println("early game tower choice");
+      if(idealTowerOrder.get(i) != UnitType.LEVEL_ONE_DEFENSE_TOWER)
+        return idealTowerOrder.get(i);
+    }
+
+    //build whatever's in queue
     if(!idealTowerOrder.isEmpty())
       return idealTowerOrder.getFirst();
 
+    //queue is over (dafuq?) roll.
     return Arrays.asList(UnitType.LEVEL_ONE_DEFENSE_TOWER,UnitType.LEVEL_ONE_MONEY_TOWER,UnitType.LEVEL_ONE_PAINT_TOWER).get(rng.nextInt(3));
 
 //    UnitType choice = DEFUALT_TOWER_TO_BUILD;

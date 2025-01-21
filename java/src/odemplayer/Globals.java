@@ -103,9 +103,9 @@ public class Globals {
       UnitType.LEVEL_ONE_DEFENSE_TOWER,
       UnitType.LEVEL_ONE_PAINT_TOWER,
       UnitType.LEVEL_ONE_MONEY_TOWER,
-      UnitType.LEVEL_ONE_DEFENSE_TOWER,
       UnitType.LEVEL_ONE_PAINT_TOWER,
       UnitType.LEVEL_ONE_MONEY_TOWER,
+      UnitType.LEVEL_ONE_DEFENSE_TOWER,
       UnitType.LEVEL_ONE_PAINT_TOWER,
       UnitType.LEVEL_ONE_MONEY_TOWER,
       UnitType.LEVEL_ONE_DEFENSE_TOWER
@@ -130,6 +130,11 @@ public class Globals {
           1,  //soldier
           0,  //splasher
           1,  //mopper
+  };
+  static final int[] EARLY_DEFENSE_SPAWNS = {
+          0,  //soldier
+          0,  //splasher
+          0,  //mopper
   };
 
   /*** soldier ***/

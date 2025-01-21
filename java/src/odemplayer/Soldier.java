@@ -64,6 +64,7 @@ class Soldier extends Globals {
 
     //game phase
     int rounds = rc.getRoundNum();
+    gamePhase = GAME_PHASE.early;
     if(rounds > EARLY_GAME_END) gamePhase = GAME_PHASE.mid;
     if(rounds > MID_GAME_END) gamePhase = GAME_PHASE.late;
 
@@ -328,8 +329,9 @@ class Soldier extends Globals {
         //should i give up at some point?
 
         //done
-        if(towerTarget.getHealth() <= 0 || (rc.canSenseLocation(target) && rc.senseRobotAtLocation(target) == null))
+        if(towerTarget.getHealth() <= 0)
         {
+          towerTarget = null;
           task = null;
           state = SOLDIER_STATES.roam;
         }
