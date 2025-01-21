@@ -2,10 +2,12 @@ package odemplayer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Random;
 
 import battlecode.common.*;
 
 public class Utils extends Globals {
+  static boolean printed = false;
 
   // TODO: not efficient enough! fix
   // TODO: add actual logic in WhatShouldIbuild, important function.
@@ -51,35 +53,50 @@ public class Utils extends Globals {
    */
   public static MapLocation roamCircle(RobotController rc) throws GameActionException {
 
-    //reset radius if havent used this for a while
+    //reset if havent used this for a while
     if(rc.getRoundNum() - circleRoamUpdate > CIRCLE_ROAM_ROUNDS_TO_RESET) {
+
+//      if(!printed) {
+//        printed = true;
+//        for (double i = 0; i < 360; i += 10) {
+//          System.out.println("cos(" + i + ") = " + Math.cos(Math.toRadians(i)) + ", sin(" + i + ") = " + Math.sin(Math.toRadians(i)));
+//        }
+//      }
+
       circleRoamRadius = 1;
-      circleRoamdest = rc.getLocation();
+      circleRoamDest = rc.getLocation();
+      circleRoamCenter = circleRoamDest;
     }
     circleRoamUpdate = rc.getRoundNum();
 
     //set new dest
-    if(rc.getLocation().distanceSquaredTo(circleRoamdest) < 2) {
+    if(rc.getLocation().distanceSquaredTo(circleRoamDest) < 2) {
 
-      //increase radius
-      circleRoamRadius++;
+      int quaterPrev = circleRoamAngle/90;
 
       //progress angle
-      int aAdd = (100)/(circleRoamRadius+1)+10;
+      int aAdd = (30)/(circleRoamRadius+1)+10;
       circleRoamAngle = (circleRoamAngle + aAdd) % 360;
 
+      //increase radius
+      if(circleRoamAngle/90 != quaterPrev)
+        circleRoamRadius++;
+
       //find dest
-      double x = rc.getLocation().x + circleRoamRadius * Math.cos(circleRoamAngle);
-      double y = rc.getLocation().y + circleRoamRadius * Math.sin(circleRoamAngle);
-      circleRoamdest = new MapLocation((int) x, (int) y);
+      double x = circleRoamCenter.x + circleRoamRadius * Math.cos(Math.toRadians(circleRoamAngle));
+      double y = circleRoamCenter.y + circleRoamRadius * Math.sin(Math.toRadians(circleRoamAngle));
+      x = Math.clamp((int)x,0,rc.getMapWidth()-1);
+      y = Math.clamp((int)y,0,rc.getMapWidth()-1);
+      circleRoamDest = new MapLocation((int) x, (int) y);
+//      System.out.println("-- circle: chose " + circleRoamDest + ", center: " + circleRoamCenter + ", r: " + circleRoamRadius + ", a: " + circleRoamAngle);
     }
 
     //approach dest
-    PathFinder.moveToLocation(rc,circleRoamdest);
-//    System.out.println(circleRoamdest);
-    rc.setIndicatorDot(circleRoamdest,204,0,204);
+    PathFinder.moveToLocation(rc, circleRoamDest);
 
-    return circleRoamdest;
+    rc.setIndicatorDot(circleRoamDest,204,0,204);
+
+    return circleRoamDest;
   }
 
   /**
@@ -144,14 +161,20 @@ public class Utils extends Globals {
     return ret;
   }
 
-  //decision making functions
-  public static UnitType WhatShouldIBuild(RobotController rc, MapLocation location){
+  /****************** decision making functions ****************************/
 
-    UnitType choice = DEFUALT_TOWER_TO_BUILD;
-    if(rc.canBuildRobot(choice,location))
-      return choice;
+  public static UnitType WhatShouldIBuild(RobotController rc, MapLocation location, GAME_PHASE phase){
 
-    return choice != null ? choice : DEFUALT_TOWER_TO_BUILD;
+    if(!idealTowerOrder.isEmpty())
+      return idealTowerOrder.getFirst();
+
+    return Arrays.asList(UnitType.LEVEL_ONE_DEFENSE_TOWER,UnitType.LEVEL_ONE_MONEY_TOWER,UnitType.LEVEL_ONE_PAINT_TOWER).get(rng.nextInt(3));
+
+//    UnitType choice = DEFUALT_TOWER_TO_BUILD;
+//    if(rc.canBuildRobot(choice,location))
+//      return choice;
+//
+//    return choice != null ? choice : DEFUALT_TOWER_TO_BUILD;
   }
   public static boolean ShouldIBuild(RobotController rc, ArrayList<RobotInfo> knownTowers){
     //if i have enough paint and tower is far do it
@@ -178,8 +201,8 @@ public class Utils extends Globals {
       break;
     }
 
-    System.out.println("location message encoded: " + ret);
-    DecodedMessage msg = new DecodedMessage(ret);
+//    System.out.println("location message encoded: " + ret);
+//    DecodedMessage msg = new DecodedMessage(ret);
 
     return ret;
   }
@@ -192,11 +215,10 @@ public class Utils extends Globals {
         break;
     }
 
-    System.out.println("int message encoded: " + ret);
+//    System.out.println("int message encoded: " + ret);
 
     return ret;
   }
-
 
 
   // TODO: send encoded message and parse
@@ -213,9 +235,19 @@ public class Utils extends Globals {
 
       if(!knownTowersInfos.contains(ally) && ally.getType().isTowerType())
         knownTowersInfos.add(ally);
+        updateTowerPriority(ally.getType());
     }
 
     return false;
+  }
+  public static void updateTowerPriority(UnitType type) throws GameActionException{
+    if(type == UnitType.LEVEL_TWO_PAINT_TOWER || type == UnitType.LEVEL_THREE_PAINT_TOWER) type = UnitType.LEVEL_ONE_PAINT_TOWER;
+    if(type == UnitType.LEVEL_TWO_MONEY_TOWER || type == UnitType.LEVEL_THREE_MONEY_TOWER) type = UnitType.LEVEL_ONE_MONEY_TOWER;
+    if(type == UnitType.LEVEL_TWO_DEFENSE_TOWER || type == UnitType.LEVEL_THREE_DEFENSE_TOWER) type = UnitType.LEVEL_ONE_DEFENSE_TOWER;
+
+    for(int i=0; i < idealTowerOrder.size(); i++){
+      if(idealTowerOrder.get(i) == type) idealTowerOrder.remove(i);
+    }
   }
 
 }

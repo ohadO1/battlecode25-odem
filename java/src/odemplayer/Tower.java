@@ -31,9 +31,11 @@ public class Tower extends Globals {
   // TODO: alert units to help build a tower
   public static void runTower(RobotController rc) throws GameActionException {
 
-    if(rc.getRoundNum() > 100) gamePhase = GAME_PHASE.mid;
-    if(rc.getRoundNum() > 300) gamePhase = GAME_PHASE.late;
     RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
+
+    int rounds = rc.getRoundNum();
+    if(rounds > EARLY_GAME_END) gamePhase = GAME_PHASE.mid;
+    if(rounds > MID_GAME_END) gamePhase = GAME_PHASE.late;
 
     switch (state) {
       case TOWER_STATE.normal:

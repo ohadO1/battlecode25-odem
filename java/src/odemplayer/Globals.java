@@ -1,8 +1,8 @@
 package odemplayer;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 
 import battlecode.common.Direction;
@@ -74,14 +74,37 @@ public class Globals {
   /********************** UTILITY VARIABLES *****************/
 
   static int circleRoamRadius = 0;
-  static int circleRoamUpdate = 0;
+  static int circleRoamUpdate = -100;
   static int circleRoamAngle = 0;
-  static MapLocation circleRoamdest  = new MapLocation(0,0);
+  static MapLocation circleRoamCenter = new MapLocation(0,0);
+  static MapLocation circleRoamDest = new MapLocation(0,0);
 
   /********************** STARTEGY **************************/
 
- 
+
+  /********* general *********/
   static final UnitType DEFUALT_TOWER_TO_BUILD = UnitType.LEVEL_ONE_PAINT_TOWER;
+  static final int EARLY_GAME_END = 100;
+  static final int MID_GAME_END = 200;
+  static final int LATE_GAME_END = 300;
+
+  //units will atempt to build towers in this order. will be affected by the unit's knownTowersInfos.
+  static ArrayList<UnitType> idealTowerOrder = new ArrayList<>(Arrays.asList(
+      UnitType.LEVEL_ONE_PAINT_TOWER, //default
+      UnitType.LEVEL_ONE_MONEY_TOWER, //default
+      UnitType.LEVEL_ONE_PAINT_TOWER,
+      UnitType.LEVEL_ONE_MONEY_TOWER,
+      UnitType.LEVEL_ONE_DEFENSE_TOWER,
+      UnitType.LEVEL_ONE_PAINT_TOWER,
+      UnitType.LEVEL_ONE_MONEY_TOWER,
+      UnitType.LEVEL_ONE_DEFENSE_TOWER,
+      UnitType.LEVEL_ONE_PAINT_TOWER,
+      UnitType.LEVEL_ONE_MONEY_TOWER,
+      UnitType.LEVEL_ONE_PAINT_TOWER,
+      UnitType.LEVEL_ONE_MONEY_TOWER,
+      UnitType.LEVEL_ONE_DEFENSE_TOWER
+  ));
+  //units will remove values here when they notice towers, and pick the first one as their priority.
 
   /*** towers ***/
   static final UnitType EARLY_GAME_MAIN_UNIT = UnitType.SOLDIER;
@@ -105,8 +128,8 @@ public class Globals {
 
   /*** soldier ***/
   static final double SOLDIER_PAINT_FOR_TASK = 0.4;                     // when a soldier fails to refill paint but has above this, he will
-  static final double SOLDIER_PAINT_FOR_CASUAL_REFILL = 0.6;                   // when a soldier has under this % and doesnt do anything special hell seek refill.
-  static final double SOLDIER_PAINT_FOR_URGENT_REFILL = 0.3;                   // when a soldier has under this % he will stop whatever hes doing and seek refill.
+  static final double SOLDIER_PAINT_FOR_CASUAL_REFILL = 0.4;                   // when a soldier has under this % and doesnt do anything special hell seek refill.
+  static final double SOLDIER_PAINT_FOR_URGENT_REFILL = 0.25;                   // when a soldier has under this % he will stop whatever hes doing and seek refill.
   static final int PAINT_TOWER_SAVING_TURNS = 50;
 
   /*** utility ***/
