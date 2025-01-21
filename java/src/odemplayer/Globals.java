@@ -75,11 +75,10 @@ public class Globals {
   static int circleRoamRadius = 0;
   static int circleRoamUpdate = -100;
   static int circleRoamAngle = 0;
-  static MapLocation circleRoamCenter = new MapLocation(0,0);
-  static MapLocation circleRoamDest = new MapLocation(0,0);
+  static MapLocation circleRoamCenter = new MapLocation(0, 0);
+  static MapLocation circleRoamDest = new MapLocation(0, 0);
 
   /********************** STARTEGY **************************/
-
 
   /********* general *********/
   static MapLocation circleRoamdest = new MapLocation(0, 0);
@@ -91,10 +90,11 @@ public class Globals {
   static final int MID_GAME_END = 200;
   static final int LATE_GAME_END = 300;
 
-  //units will atempt to build towers in this order. will be affected by the unit's knownTowersInfos.
+  // units will atempt to build towers in this order. will be affected by the
+  // unit's knownTowersInfos.
   static ArrayList<UnitType> idealTowerOrder = new ArrayList<>(Arrays.asList(
-      UnitType.LEVEL_ONE_PAINT_TOWER, //default
-      UnitType.LEVEL_ONE_MONEY_TOWER, //default
+      UnitType.LEVEL_ONE_PAINT_TOWER, // default
+      UnitType.LEVEL_ONE_MONEY_TOWER, // default
       UnitType.LEVEL_ONE_PAINT_TOWER,
       UnitType.LEVEL_ONE_MONEY_TOWER,
       UnitType.LEVEL_ONE_DEFENSE_TOWER,
@@ -105,9 +105,9 @@ public class Globals {
       UnitType.LEVEL_ONE_MONEY_TOWER,
       UnitType.LEVEL_ONE_PAINT_TOWER,
       UnitType.LEVEL_ONE_MONEY_TOWER,
-      UnitType.LEVEL_ONE_DEFENSE_TOWER
-  ));
-  //units will remove values here when they notice towers, and pick the first one as their priority.
+      UnitType.LEVEL_ONE_DEFENSE_TOWER));
+  // units will remove values here when they notice towers, and pick the first one
+  // as their priority.
 
   /*** towers ***/
   static final UnitType EARLY_GAME_MAIN_UNIT = UnitType.SOLDIER;

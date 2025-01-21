@@ -77,6 +77,10 @@ public class Mopper extends Globals {
 
     switch (state) {
       case roam:
+
+        // remain only in our tiles
+        Utils.mopperRoam(rc);
+
         rc.setIndicatorString("in roam");
         Utils.roamGracefullyf(rc);
         // find out more about attcks
