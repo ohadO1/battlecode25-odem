@@ -217,7 +217,7 @@ class Soldier extends Globals {
         }
 
         //find tower to ask to save chips
-        if(stateChanged){
+        if(stateChanged || askToSaveDest == null){
 
           //look for a money tower
           askToSaveDest = Utils.findClosestTower(knownTowersInfos, rc, new UnitType[]{UnitType.LEVEL_ONE_PAINT_TOWER, UnitType.LEVEL_TWO_PAINT_TOWER, UnitType.LEVEL_THREE_PAINT_TOWER});
@@ -305,7 +305,6 @@ class Soldier extends Globals {
       MapInfo nextLocInfo = rc.senseMapInfo(loc);
       if (!nextLocInfo.getPaint().isAlly()) {
         rc.attack(loc);
-        System.out.println("--attacked feet");
       }
     }
 
