@@ -33,6 +33,10 @@ public class Tower extends Globals {
 
     RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
 
+    int rounds = rc.getRoundNum();
+    if(rounds > EARLY_GAME_END) gamePhase = GAME_PHASE.mid;
+    if(rounds > MID_GAME_END) gamePhase = GAME_PHASE.late;
+
     switch (state) {
       case TOWER_STATE.normal:
 

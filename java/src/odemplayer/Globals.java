@@ -1,6 +1,8 @@
 package odemplayer;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 
 import battlecode.common.Direction;
@@ -85,6 +87,24 @@ public class Globals {
   static final int EARLY_GAME_END = 100;
   static final int MID_GAME_END = 200;
   static final int LATE_GAME_END = 300;
+
+  //units will atempt to build towers in this order. will be affected by the unit's knownTowersInfos.
+  static ArrayList<UnitType> idealTowerOrder = new ArrayList<>(Arrays.asList(
+      UnitType.LEVEL_ONE_PAINT_TOWER, //default
+      UnitType.LEVEL_ONE_MONEY_TOWER, //default
+      UnitType.LEVEL_ONE_PAINT_TOWER,
+      UnitType.LEVEL_ONE_MONEY_TOWER,
+      UnitType.LEVEL_ONE_DEFENSE_TOWER,
+      UnitType.LEVEL_ONE_PAINT_TOWER,
+      UnitType.LEVEL_ONE_MONEY_TOWER,
+      UnitType.LEVEL_ONE_DEFENSE_TOWER,
+      UnitType.LEVEL_ONE_PAINT_TOWER,
+      UnitType.LEVEL_ONE_MONEY_TOWER,
+      UnitType.LEVEL_ONE_PAINT_TOWER,
+      UnitType.LEVEL_ONE_MONEY_TOWER,
+      UnitType.LEVEL_ONE_DEFENSE_TOWER
+  ));
+  //units will remove values here when they notice towers, and pick the first one as their priority.
 
   /*** towers ***/
   static final UnitType EARLY_GAME_MAIN_UNIT = UnitType.SOLDIER;

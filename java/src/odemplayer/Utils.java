@@ -2,6 +2,7 @@ package odemplayer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Random;
 
 import battlecode.common.*;
 
@@ -87,13 +88,12 @@ public class Utils extends Globals {
       x = Math.clamp((int)x,0,rc.getMapWidth());
       y = Math.clamp((int)y,0,rc.getMapWidth());
       circleRoamDest = new MapLocation((int) x, (int) y);
-      System.out.println("-- circle: chose " + circleRoamDest + ", center: " + circleRoamCenter + ", r: " + circleRoamRadius + ", a: " + circleRoamAngle);
+//      System.out.println("-- circle: chose " + circleRoamDest + ", center: " + circleRoamCenter + ", r: " + circleRoamRadius + ", a: " + circleRoamAngle);
     }
 
     //approach dest
     PathFinder.moveToLocation(rc, circleRoamDest);
 
-//    System.out.println(circleRoamdest);
     rc.setIndicatorDot(circleRoamDest,204,0,204);
 
     return circleRoamDest;
@@ -163,15 +163,18 @@ public class Utils extends Globals {
 
   /****************** decision making functions ****************************/
 
-  public static UnitType WhatShouldIBuild(RobotController rc, MapLocation location){
+  public static UnitType WhatShouldIBuild(RobotController rc, MapLocation location, GAME_PHASE phase){
 
+    if(!idealTowerOrder.isEmpty())
+      return idealTowerOrder.getFirst();
 
+    return Arrays.asList(UnitType.LEVEL_ONE_DEFENSE_TOWER,UnitType.LEVEL_ONE_MONEY_TOWER,UnitType.LEVEL_ONE_PAINT_TOWER).get(rng.nextInt(3));
 
-    UnitType choice = DEFUALT_TOWER_TO_BUILD;
-    if(rc.canBuildRobot(choice,location))
-      return choice;
-
-    return choice != null ? choice : DEFUALT_TOWER_TO_BUILD;
+//    UnitType choice = DEFUALT_TOWER_TO_BUILD;
+//    if(rc.canBuildRobot(choice,location))
+//      return choice;
+//
+//    return choice != null ? choice : DEFUALT_TOWER_TO_BUILD;
   }
   public static boolean ShouldIBuild(RobotController rc, ArrayList<RobotInfo> knownTowers){
     //if i have enough paint and tower is far do it
@@ -232,9 +235,19 @@ public class Utils extends Globals {
 
       if(!knownTowersInfos.contains(ally) && ally.getType().isTowerType())
         knownTowersInfos.add(ally);
+        updateTowerPriority(ally.getType());
     }
 
     return false;
+  }
+  public static void updateTowerPriority(UnitType type) throws GameActionException{
+    if(type == UnitType.LEVEL_TWO_PAINT_TOWER || type == UnitType.LEVEL_THREE_PAINT_TOWER) type = UnitType.LEVEL_ONE_PAINT_TOWER;
+    if(type == UnitType.LEVEL_TWO_MONEY_TOWER || type == UnitType.LEVEL_THREE_MONEY_TOWER) type = UnitType.LEVEL_ONE_MONEY_TOWER;
+    if(type == UnitType.LEVEL_TWO_DEFENSE_TOWER || type == UnitType.LEVEL_THREE_DEFENSE_TOWER) type = UnitType.LEVEL_ONE_DEFENSE_TOWER;
+
+    for(int i=0; i < idealTowerOrder.size(); i++){
+      if(idealTowerOrder.get(i) == type) idealTowerOrder.remove(i);
+    }
   }
 
 }
