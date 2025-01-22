@@ -51,7 +51,6 @@ public class Splasher extends Globals {
                     // Random movement while painting
                     roamAndPaint(rc);
                 }
-
                 // Check paint levels
                 if (currentPaint < PAINT_THRESHOLD_REFILL) {
                     state = SPLASHER_STATE.waitForRefill;
@@ -204,8 +203,19 @@ public class Splasher extends Globals {
    * @throws GameActionException
    */
   private static void roamAndPaint(RobotController rc) throws GameActionException {
+    
       if (rc.isMovementReady()) {
-        state = SPLASHER_STATE.roam;
+        int choice = (int) (Math.random() * 3);
+        switch (choice) {
+            case 0:     Utils.roamGracefullyf(rc);         break;
+            case 1:     Utils.roamCircle(rc);              break;
+            case 3:
+                Direction randomDirection = Utils.getRandomDirection(rc);
+                if (rc.canMove(randomDirection)) {
+                    rc.move(randomDirection);
+                }
+
+
     }
       
 
@@ -220,4 +230,5 @@ public class Splasher extends Globals {
       }
   }
 
+  }
 }

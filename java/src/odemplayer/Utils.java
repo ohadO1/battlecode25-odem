@@ -321,5 +321,13 @@ public class Utils extends Globals {
       if(idealTowerOrder.get(i) == type) idealTowerOrder.remove(i);
     }
   }
-
+  public static Direction getRandomDirection(RobotController rc) throws GameActionException {
+      Direction[] directions = Direction.allDirections(); 
+      Direction randomDirection;
+      randomDirection = directions[(int) (Math.random() * directions.length)];
+      if (rc.canMove(randomDirection))
+        return randomDirection;
+      else
+        return getRandomDirection(rc);
+  }
 }
