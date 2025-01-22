@@ -30,6 +30,7 @@ public class Globals {
     askForRefill,
     buildTowerHere,
     attackTower,
+    sendMopperToClearRuin,
   }
 
   // in the encoder/decoder, use: messageTypesIndexes.indexOf(type) to get a

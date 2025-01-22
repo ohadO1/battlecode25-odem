@@ -80,6 +80,7 @@ public class Tower extends Globals {
 
     // === MESSAGES === //
 
+    //TODO: send moppers to clean ruins
     // Read incoming messages
     Message[] messages = rc.readMessages(-1);
     for (Message m : messages) {
@@ -102,6 +103,7 @@ public class Tower extends Globals {
           ruinSpots.add((MapLocation) message.data);
           break;
       }
+
     }
 
 
@@ -123,16 +125,6 @@ public class Tower extends Globals {
         }
       }
     }
-//    //send moppers to refill soldiers and splashers -- cancelled, they refill themselves now.
-//    if(!refillSpots.isEmpty()){
-//      for(RobotInfo robot : nearbyRobots){
-//        if(robot.getTeam() == rc.getTeam() && robot.type == UnitType.MOPPER && rc.canSenseLocation(robot.getLocation())){
-//          int msg = Utils.encodeMessage(MESSAGE_TYPE.askForRefill,refillSpots.removeFirst());
-//          rc.sendMessage(robot.getLocation(),msg);
-//        }
-//      }
-//    }
-
 
     rc.setIndicatorString(Arrays.toString(unitsCreated));
   }

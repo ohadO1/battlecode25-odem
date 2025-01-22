@@ -268,6 +268,7 @@ public class Utils extends Globals {
     switch(type){
       case MESSAGE_TYPE.buildTowerHere:
       case MESSAGE_TYPE.askForRefill:
+      case MESSAGE_TYPE.sendMopperToClearRuin:
         int x = location.x, y = location.y;
         ret += x*10 + y*1000;
       break;

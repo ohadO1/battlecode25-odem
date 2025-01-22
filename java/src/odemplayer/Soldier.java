@@ -2,7 +2,7 @@ package odemplayer;
 
 import battlecode.common.*;
 
-import java.io.Console;
+import java.util.Stack;
 
 class Soldier extends Globals {
 
@@ -14,6 +14,7 @@ class Soldier extends Globals {
     notifySaveChips,//not enough chips to build a tower. find a money tower to ask to save.
     seekRefill,     //look for a tower with paint to refill paint from.
     attack,         //found a tower with enough friends to attack it.
+    sendMessages,   //go to the nearest tower and send it my message queue.
   }
 
   //tasks are like a macro state. they are persistent within states.
@@ -35,6 +36,9 @@ class Soldier extends Globals {
   //notifyTower
   static MapLocation notifyDest;         //tower to notify ive found a ruin
   static MapLocation notifiedToSaveFor;  //save the ruinDest I asked to save for, to not ask again.
+  static Stack<Integer> messagesStack = new Stack<>();
+  static MapLocation sendMessageDest;
+
 
   //build tower
   static UnitType towerToBuild;
@@ -42,13 +46,13 @@ class Soldier extends Globals {
   //ask to save
   static MapLocation askToSaveDest;
 
-  //ask for refill
   static int refillWait;
   static RobotInfo refillTower;
 
   //task specific vars
   static MapInfo ruinDest = null; //ruin im aiming to build a tower at
   static RobotInfo towerTarget = null; //tower im aiming to ruin
+  static boolean askedTowerToSendMopper = false;
 
   // TODO: if waiting too long for saving money, consider going to ask more towers to save.
   // TODO: stop building tower if pattern is done and someone else is on it
@@ -76,6 +80,10 @@ class Soldier extends Globals {
 
           if(task == SOLDIER_TASKS.buildTower){
             state = SOLDIER_STATES.buildTower;
+            break;
+          }
+          if(task == SOLDIER_TASKS.attack){
+            state = SOLDIER_STATES.attack;
             break;
           }
 
@@ -174,6 +182,16 @@ class Soldier extends Globals {
         boolean attacked = false;
         MapInfo[] patternTiles = rc.senseNearbyMapInfos(targetLocation, 8);
         for (int i = 0; i < patternTiles.length && !attacked; i++) {
+
+          //found enemy paint
+          if(patternTiles[i].getPaint() == PaintType.ENEMY_PRIMARY || patternTiles[i].getPaint() == PaintType.ENEMY_SECONDARY)
+          if(!askedTowerToSendMopper)
+          {
+            askedTowerToSendMopper = true;
+            messagesStack.add(Utils.encodeMessage(MESSAGE_TYPE.sendMopperToClearRuin,ruinDest.getMapLocation()));
+          }
+
+          //found a paintable spot
           if (patternTiles[i].getMark() != patternTiles[i].getPaint() && patternTiles[i].getMark() != PaintType.EMPTY) {
 
             //found a spot to paint. attack it
@@ -197,16 +215,17 @@ class Soldier extends Globals {
           }
           //enough chips/already notified. build tower.
           if(rc.canCompleteTowerPattern(towerToBuild,targetLocation)){
+            askedTowerToSendMopper = false;
             rc.completeTowerPattern(towerToBuild, targetLocation);
             state = SOLDIER_STATES.roam;
+            task = null;
           }
-//          else System.out.println("type: " + towerToBuild + ", chips: " + rc.getChips() + ", at: " + targetLocation + " can complete: " + rc.canCompleteTowerPattern(towerToBuild,targetLocation));
 
         }
 
         break;
       //endregion
-      //region notify tower
+      //region notify tower about a ruin i need help with
         case SOLDIER_STATES.notifyTower:
 
           //find dest
@@ -226,7 +245,7 @@ class Soldier extends Globals {
           }
         break;
         //endregion
-      //region notify to save chips
+      //region ask tower to save chips
       case SOLDIER_STATES.notifySaveChips:
 
         //someone else built it
@@ -239,15 +258,15 @@ class Soldier extends Globals {
         if(stateChanged || askToSaveDest == null){
 
           //look for a money tower
-          askToSaveDest = Utils.findClosestTower(knownTowersInfos, rc, new UnitType[]{UnitType.LEVEL_ONE_PAINT_TOWER, UnitType.LEVEL_TWO_PAINT_TOWER, UnitType.LEVEL_THREE_PAINT_TOWER});
+          askToSaveDest = Utils.findClosestTower(knownTowersInfos, rc, new UnitType[]{UnitType.LEVEL_ONE_MONEY_TOWER, UnitType.LEVEL_TWO_MONEY_TOWER, UnitType.LEVEL_THREE_MONEY_TOWER});
 
-          //i dont know any money tower. ask any tower, he'll take care of it
-          askToSaveDest = Utils.findClosestTower(knownTowersInfos,rc);
+          //I didnt find any money tower, pick whatever.
+          askToSaveDest = Utils.findClosestTower(knownTowersInfos, rc);
 
           //i was born at a tower so i must know atleast one. but as failsafe
           if(askToSaveDest == null) {
-            indicatorMessage = "found no tower to ask to save chips.";
-            state = SOLDIER_STATES.buildTower;
+            indicatorMessage = "found no tower to ask to send messages.";
+            state = SOLDIER_STATES.roam;
             break;
           }
 
@@ -266,15 +285,45 @@ class Soldier extends Globals {
 
           //ask for a refill
           if((double) rc.getPaint() /rc.getType().paintCapacity < SOLDIER_PAINT_FOR_TASK){
-            Clock.yield();
-            rc.sendMessage(askToSaveDest,Utils.encodeMessage(MESSAGE_TYPE.askForRefill,rc.getLocation()));
             state = SOLDIER_STATES.seekRefill;
           }
           else state = SOLDIER_STATES.buildTower;
         }
 
       break;
-      //endregioni
+      //endregion
+      //region notify tower
+      case SOLDIER_STATES.sendMessages:
+
+        //done
+        if(messagesStack.isEmpty()){
+
+          //get a refill while im at it
+          if((double)rc.getPaint() / rc.getType().paintCapacity <= SOLDIER_PAINT_FOR_CASUAL_REFILL)
+            state = SOLDIER_STATES.seekRefill;
+          else
+            state = SOLDIER_STATES.roam;
+          break;
+        }
+
+        //find tower to ask to save chips
+        if(stateChanged || sendMessageDest == null){
+
+          //pick a tower
+          sendMessageDest = Utils.findClosestTower(knownTowersInfos,rc);
+        }
+
+        //goto the tower I chose
+        PathFinder.moveToLocation(rc,sendMessageDest);
+
+        //send message
+        if(rc.canSendMessage(sendMessageDest)){
+
+          rc.sendMessage(sendMessageDest,messagesStack.pop());
+        }
+
+        break;
+      //endregion
       //region seek a refill
       case SOLDIER_STATES.seekRefill:
 
@@ -341,6 +390,12 @@ class Soldier extends Globals {
 
       break;
       //endregion
+    }
+
+    //if i have messages in queue, switch to notify state
+    if(!messagesStack.isEmpty()) {
+      state = SOLDIER_STATES.sendMessages;
+      indicatorMessage += "\nmessages: {" + messagesStack.size() + "}: " + (new DecodedMessage<>(messagesStack.peek()));
     }
 
     //states
