@@ -110,6 +110,13 @@ public class Mopper extends Globals {
       case refillAlly:
         rc.setIndicatorString("in refillAlly");
         int numToTransfer = rc.getPaint() > 60 ? 50 : rc.getPaint();
+        for (RobotInfo robot : rc.senseNearbyRobots(4)) {
+          if (robot.getType().isTowerType() && robot.getTeam() != rc.getTeam()) {
+            allyToRefill = null;
+            state = MOPPER_STATE.roam;
+            break;
+          }
+        }
         if (rc.canTransferPaint(allyToRefill.location, numToTransfer)) {
           rc.transferPaint(allyToRefill.getLocation(), numToTransfer);
           allyToRefill = null;
