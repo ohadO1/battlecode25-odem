@@ -24,7 +24,7 @@ public class DecodedMessage<T> extends Globals{
             case MESSAGE_TYPE.buildTowerHere:
             case MESSAGE_TYPE.sendMopperToClearRuin:
             case MESSAGE_TYPE.askForRefill:
-
+            case MESSAGE_TYPE.sendMopperToCenterOfMap:
                 int x = message % 100;
                 message /= 100;
                 int y = message % 100;
