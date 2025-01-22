@@ -8,6 +8,7 @@ import battlecode.common.PaintType;
 import battlecode.common.RobotController;
 import battlecode.common.RobotInfo;
 import battlecode.common.UnitType;
+import odemplayer.Soldier.SOLDIER_STATES;
 
 public class Splasher extends Globals {
   private enum SPLASHER_STATE {
@@ -15,8 +16,11 @@ public class Splasher extends Globals {
     waitForRefill,
     MoveToAttackTower,
     ATTACK_TOWER,
+    seekRefill
   }
   private static int refillWait;
+  static int stateChangedRunAt = 0;
+  static RobotInfo refillTower;
   private static SPLASHER_STATE state = SPLASHER_STATE.roam;
   private static SPLASHER_STATE prevState = state;
   private static boolean stateChanged = false;
@@ -51,11 +55,46 @@ public class Splasher extends Globals {
                     roamAndPaint(rc);
                 }
                 // Check paint levels
-                if (currentPaint < PAINT_THRESHOLD_REFILL) {
-                    state = SPLASHER_STATE.waitForRefill;
-                }
+                refillTower = null;
+                if(((double)rc.getPaint())/rc.getType().paintCapacity < SOLDIER_PAINT_FOR_CASUAL_REFILL)
+                state = SPLASHER_STATE.seekRefill;
                 break;
+            case seekRefill:
+                //abort
+                if((double)rc.getPaint()/rc.getType().paintCapacity > SOLDIER_PAINT_FOR_CASUAL_REFILL)
+                state = SPLASHER_STATE.roam;
 
+                int missingPaint = rc.getType().paintCapacity - rc.getPaint();
+                if(stateChanged || refillTower == null) {
+                stateChangedRunAt = rc.getRoundNum();
+        //          System.out.print("looking for tower ... ");
+                refillTower = null;
+
+                for(RobotInfo tower : knownTowersInfos){
+                    if(refillTower == null ||
+                        (tower.getLocation().distanceSquaredTo(rc.getLocation()) < refillTower.getLocation().distanceSquaredTo(rc.getLocation()))
+                        && tower.getPaintAmount() >= missingPaint)
+                    refillTower = tower;
+                }
+                //no tower has enough paint. just go to the nearest and wait there.
+                if(refillTower == null) refillTower = Utils.findClosestTowerInfo(knownTowersInfos,rc);
+                }
+                if(refillTower == null) System.out.println("still didnt find any tower. state changed run at: " + stateChangedRunAt);
+                //move
+                PathFinder.moveToLocation(rc,refillTower.getLocation());
+                //am i there yet?
+                if(!rc.canTransferPaint(refillTower.getLocation(),0)){
+
+                if(rc.canTransferPaint(refillTower.getLocation(),-missingPaint))
+                {
+                    rc.transferPaint(refillTower.getLocation(),-missingPaint);
+                    state = SPLASHER_STATE.roam;
+                }
+                }
+
+      break;
+      //endregion
+      //region attack towers
             case waitForRefill:
               if(stateChanged) refillWait = 0;
               refillWait++;
@@ -85,9 +124,8 @@ public class Splasher extends Globals {
                     break;
                 }
                 // Check paint levels
-                if (currentPaint < PAINT_THRESHOLD_ATTACK) {
-                  state = SPLASHER_STATE.waitForRefill;
-              }
+                if(((double)rc.getPaint())/rc.getType().paintCapacity < SOLDIER_PAINT_FOR_CASUAL_REFILL)
+                state = SPLASHER_STATE.seekRefill;
                 // Move towards the enemy tower
                 if (rc.getLocation().distanceSquaredTo(enemyTowerLocation) <= rc.getType().actionRadiusSquared) {
                     state = SPLASHER_STATE.ATTACK_TOWER;
