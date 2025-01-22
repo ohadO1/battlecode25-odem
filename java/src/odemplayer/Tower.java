@@ -18,6 +18,7 @@ public class Tower extends Globals {
   static int saveGoal = 0;
   static ArrayList<MapLocation> refillSpots = new ArrayList<>();
   static ArrayList<MapLocation> ruinSpots = new ArrayList<>();
+  static ArrayList<MapLocation> ruinCleanSpots = new ArrayList<>();
 
   static int[] unitsCreated = new int[3];
   static GAME_PHASE gamePhase = GAME_PHASE.early;
@@ -80,7 +81,6 @@ public class Tower extends Globals {
 
     // === MESSAGES === //
 
-    //TODO: send moppers to clean ruins
     // Read incoming messages
     Message[] messages = rc.readMessages(-1);
     for (Message m : messages) {
@@ -102,6 +102,10 @@ public class Tower extends Globals {
         case MESSAGE_TYPE.buildTowerHere:
           ruinSpots.add((MapLocation) message.data);
           break;
+
+        case MESSAGE_TYPE.sendMopperToClearRuin:
+          ruinCleanSpots.add((MapLocation) message.data);
+          break;
       }
 
     }
@@ -111,16 +115,21 @@ public class Tower extends Globals {
     //we wont send multipile missions to single robots, so the order of these indicate priority.
     //we can later maybe genelerize it using some list but for now it seems overkill.
 
-    //TODO merge the loops
     //send robots to help build a ruin
     if(!ruinSpots.isEmpty()){
-      //sending one extra robot seems enough.
-      //if it turns out to not be the case, add some logic for remebering how many we sent for the current spot.
       for(RobotInfo robot : nearbyRobots){
         if(robot.getTeam() == rc.getTeam() && (double) robot.getPaintAmount() / robot.type.paintCapacity >= SOLDIER_PAINT_FOR_TASK
                 && robot.type == UnitType.SOLDIER){
           //im not checking also whether i can send him a message cuz im pretty sure "sense <=> can send" but look out for exceptions.
           int msg = Utils.encodeMessage(MESSAGE_TYPE.buildTowerHere,ruinSpots.removeFirst());
+          rc.sendMessage(robot.getLocation(),msg);
+        }
+      }
+    }
+    if(!ruinCleanSpots.isEmpty()){
+      for(RobotInfo robot : nearbyRobots) {
+        if(robot.getTeam() == rc.getTeam() && robot.getType() == UnitType.MOPPER){
+          int msg = Utils.encodeMessage(MESSAGE_TYPE.sendMopperToClearRuin,ruinCleanSpots.removeFirst());
           rc.sendMessage(robot.getLocation(),msg);
         }
       }
