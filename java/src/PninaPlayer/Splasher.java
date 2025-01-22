@@ -1,4 +1,4 @@
-package odemplayer;
+package PninaPlayer;
 
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
@@ -8,7 +8,7 @@ import battlecode.common.PaintType;
 import battlecode.common.RobotController;
 import battlecode.common.RobotInfo;
 import battlecode.common.UnitType;
-import odemplayer.Soldier.SOLDIER_STATES;
+import PninaPlayer.Soldier.SOLDIER_STATES;
 
 public class Splasher extends Globals {
   private enum SPLASHER_STATE {
