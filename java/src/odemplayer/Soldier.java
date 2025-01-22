@@ -2,6 +2,8 @@ package odemplayer;
 
 import battlecode.common.*;
 
+import java.io.Console;
+
 class Soldier extends Globals {
 
   enum SOLDIER_STATES{
@@ -48,15 +50,13 @@ class Soldier extends Globals {
   static MapInfo ruinDest = null; //ruin im aiming to build a tower at
   static RobotInfo towerTarget = null; //tower im aiming to ruin
 
-  // TODO: attack state
-  // TODO: scout direction state
-  // TODO: search for enemy towers and call an attack
-  // TODO: if notified tower about a ruin, consider also asking it to save money for building that tower.
+  // TODO: if waiting too long for saving money, consider going to ask more towers to save.
   // TODO: stop building tower if pattern is done and someone else is on it
 
   public static void runSoldier(RobotController rc) throws GameActionException {
 
     Utils.updateFriendlyTowers(rc);
+    String indicatorMessage = "";
 
     // ==== seek refill ====
     if(((double)rc.getPaint())/rc.getType().paintCapacity < SOLDIER_PAINT_FOR_URGENT_REFILL)
@@ -149,14 +149,13 @@ class Soldier extends Globals {
       //region build tower
       case SOLDIER_STATES.buildTower:
 
-        if(stateChanged) System.out.println("starting to build tower at: " + ruinDest.getMapLocation());
-
         //go to the ruin
         MapLocation targetLocation = ruinDest.getMapLocation();
         Direction dir = rc.getLocation().directionTo(targetLocation);
         PathFinder.moveToLocation(rc,targetLocation);                   //may conflict later in this state, maybe stop moving once there.
 
         towerToBuild = Utils.WhatShouldIBuild(rc,targetLocation,gamePhase);
+        indicatorMessage = "building " + towerToBuild + " at " + ruinDest.getMapLocation() + ", prio: " + idealTowerOrder.size();
 
         //someone else built it
         if(rc.canSenseLocation(targetLocation) && rc.senseRobotAtLocation(targetLocation) != null){
@@ -246,7 +245,11 @@ class Soldier extends Globals {
           askToSaveDest = Utils.findClosestTower(knownTowersInfos,rc);
 
           //i was born at a tower so i must know atleast one. but as failsafe
-          if(askToSaveDest == null) state = SOLDIER_STATES.buildTower;
+          if(askToSaveDest == null) {
+            indicatorMessage = "found no tower to ask to save chips.";
+            state = SOLDIER_STATES.buildTower;
+            break;
+          }
 
           //make sure i have decided what tower i wanna build
           if(towerToBuild == null) towerToBuild = Utils.WhatShouldIBuild(rc,ruinDest.getMapLocation(),gamePhase);
@@ -271,7 +274,7 @@ class Soldier extends Globals {
         }
 
       break;
-    //endregioni
+      //endregioni
       //region seek a refill
       case SOLDIER_STATES.seekRefill:
 
@@ -282,7 +285,7 @@ class Soldier extends Globals {
         int missingPaint = rc.getType().paintCapacity - rc.getPaint();
         if(stateChanged || refillTower == null) {
           stateChangedRunAt = rc.getRoundNum();
-//          System.out.print("looking for tower ... ");
+  //          System.out.print("looking for tower ... ");
           refillTower = null;
 
           for(RobotInfo tower : knownTowersInfos){
@@ -313,7 +316,7 @@ class Soldier extends Globals {
 
       break;
       //endregion
-      //region Description
+      //region attack towers
       case SOLDIER_STATES.attack:
 
         MapLocation target = towerTarget.getLocation();
@@ -353,7 +356,7 @@ class Soldier extends Globals {
       }
     }
 
-    rc.setIndicatorString("state: " + state.name() + ", changed: " + (stateChanged ? 1 : 0) + ", known towers: " + knownTowersInfos.size());
+    rc.setIndicatorString("state: " + state.name() + ", changed: " + (stateChanged ? 1 : 0) + "\nknown towers: " + knownTowersInfos.size() + "\n" + indicatorMessage);
   }
 
 }

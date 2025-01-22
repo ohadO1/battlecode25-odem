@@ -119,7 +119,7 @@ public class Mopper extends Globals {
         if (!rc.canAttack(tileToAttack)) {
           PathFinder.moveToLocation(rc, tileToAttack);
         }
-        rc.attack(tileToAttack);
+        else rc.attack(tileToAttack);
         tileToAttack = null;
         state = MOPPER_STATE.roam;
         break;

@@ -42,9 +42,9 @@ public class Tower extends Globals {
 
         // apply spawn pattern according to phase.
         switch(gamePhase) {
-          case GAME_PHASE.early -> earlyGameSpawnPattern(rc, unitsCreated);
-          case GAME_PHASE.mid -> attemptCreatingUnits(rc);
-          case GAME_PHASE.late -> attemptCreatingUnits(rc);
+          case GAME_PHASE.early:  earlyGameSpawnPattern(rc, unitsCreated); break;
+          case GAME_PHASE.mid: if(rc.getChips() > 1050) attemptCreatingUnits(rc); break;
+          case GAME_PHASE.late: if(rc.getChips() > 1050) attemptCreatingUnits(rc); break;
         }
 
         break;
@@ -123,15 +123,15 @@ public class Tower extends Globals {
         }
       }
     }
-    //send moppers to refill soldiers and splashers
-    if(!refillSpots.isEmpty()){
-      for(RobotInfo robot : nearbyRobots){
-        if(robot.getTeam() == rc.getTeam() && robot.type == UnitType.MOPPER && rc.canSenseLocation(robot.getLocation())){
-          int msg = Utils.encodeMessage(MESSAGE_TYPE.askForRefill,refillSpots.removeFirst());
-          rc.sendMessage(robot.getLocation(),msg);
-        }
-      }
-    }
+//    //send moppers to refill soldiers and splashers -- cancelled, they refill themselves now.
+//    if(!refillSpots.isEmpty()){
+//      for(RobotInfo robot : nearbyRobots){
+//        if(robot.getTeam() == rc.getTeam() && robot.type == UnitType.MOPPER && rc.canSenseLocation(robot.getLocation())){
+//          int msg = Utils.encodeMessage(MESSAGE_TYPE.askForRefill,refillSpots.removeFirst());
+//          rc.sendMessage(robot.getLocation(),msg);
+//        }
+//      }
+//    }
 
 
     rc.setIndicatorString(Arrays.toString(unitsCreated));
