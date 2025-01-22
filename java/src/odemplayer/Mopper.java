@@ -62,11 +62,15 @@ public class Mopper extends Globals {
     for (MapInfo tile : rc.senseNearbyMapInfos()) {
       RobotInfo potentialEnemy = rc.senseRobotAtLocation(tile.getMapLocation());
       if (potentialEnemy != null && (potentialEnemy.team != rc.getTeam())) {
-        if (rc.canMopSwing(rc.getLocation().directionTo(potentialEnemy.getLocation()))) {
-          rc.mopSwing(rc.getLocation().directionTo(potentialEnemy.getLocation()));
-        }
+        //TODO: understand cooldown and mopswing penalty
+        // if
+        // (rc.canMopSwing(rc.getLocation().directionTo(potentialEnemy.getLocation())))
+        // {
+        // rc.mopSwing(rc.getLocation().directionTo(potentialEnemy.getLocation()));
+        // return;
+        // }
       }
-      if (tileToAttack == null && tile.getPaint().isEnemy()) {
+      if (rc.senseMapInfo(rc.getLocation()).getPaint().isAlly() && tileToAttack == null && tile.getPaint().isEnemy()) {
         state = MOPPER_STATE.attackTile;
         tileToAttack = tile.getMapLocation();
       }
@@ -118,6 +122,7 @@ public class Mopper extends Globals {
         rc.setIndicatorString("attackTile");
         if (!rc.canAttack(tileToAttack)) {
           PathFinder.moveToLocation(rc, tileToAttack);
+          return;
         }
         rc.attack(tileToAttack);
         tileToAttack = null;
