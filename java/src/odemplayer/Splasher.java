@@ -35,7 +35,6 @@ public class Splasher extends Globals {
     // Initialize any necessary variables
     Utils.updateFriendlyTowers(rc);
 
-    while (true) {
       try {
         stateChanged = false;
         double currentPaint = rc.getPaint();
@@ -112,7 +111,7 @@ public class Splasher extends Globals {
                 break;
 
 
-            default: //TODO why is this an error?
+            default: 
                 state = SPLASHER_STATE.roam;
                 break;
           }
@@ -122,7 +121,7 @@ public class Splasher extends Globals {
         System.out.println("Splasher Exception");
         e.printStackTrace();
       }
-      }
+      
   }
 
   /**
