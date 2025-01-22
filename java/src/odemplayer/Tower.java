@@ -18,6 +18,7 @@ public class Tower extends Globals {
   static int saveGoal = 0;
   static ArrayList<MapLocation> refillSpots = new ArrayList<>();
   static ArrayList<MapLocation> ruinSpots = new ArrayList<>();
+  static ArrayList<MapLocation> ruinCleanSpots = new ArrayList<>();
 
   static int[] unitsCreated = new int[3];
   static GAME_PHASE gamePhase = GAME_PHASE.early;
@@ -42,9 +43,9 @@ public class Tower extends Globals {
 
         // apply spawn pattern according to phase.
         switch(gamePhase) {
-          case GAME_PHASE.early -> earlyGameSpawnPattern(rc, unitsCreated);
-          case GAME_PHASE.mid -> attemptCreatingUnits(rc);
-          case GAME_PHASE.late -> attemptCreatingUnits(rc);
+          case GAME_PHASE.early:  earlyGameSpawnPattern(rc, unitsCreated); break;
+          case GAME_PHASE.mid: if(rc.getChips() > 1050) attemptCreatingUnits(rc); break;
+          case GAME_PHASE.late: if(rc.getChips() > 1050) attemptCreatingUnits(rc); break;
         }
 
         break;
@@ -101,7 +102,12 @@ public class Tower extends Globals {
         case MESSAGE_TYPE.buildTowerHere:
           ruinSpots.add((MapLocation) message.data);
           break;
+
+        case MESSAGE_TYPE.sendMopperToClearRuin:
+          ruinCleanSpots.add((MapLocation) message.data);
+          break;
       }
+
     }
 
 
@@ -109,11 +115,8 @@ public class Tower extends Globals {
     //we wont send multipile missions to single robots, so the order of these indicate priority.
     //we can later maybe genelerize it using some list but for now it seems overkill.
 
-    //TODO merge the loops
     //send robots to help build a ruin
     if(!ruinSpots.isEmpty()){
-      //sending one extra robot seems enough.
-      //if it turns out to not be the case, add some logic for remebering how many we sent for the current spot.
       for(RobotInfo robot : nearbyRobots){
         if(robot.getTeam() == rc.getTeam() && (double) robot.getPaintAmount() / robot.type.paintCapacity >= SOLDIER_PAINT_FOR_TASK
                 && robot.type == UnitType.SOLDIER){
@@ -123,16 +126,14 @@ public class Tower extends Globals {
         }
       }
     }
-    //send moppers to refill soldiers and splashers
-    if(!refillSpots.isEmpty()){
-      for(RobotInfo robot : nearbyRobots){
-        if(robot.getTeam() == rc.getTeam() && robot.type == UnitType.MOPPER && rc.canSenseLocation(robot.getLocation())){
-          int msg = Utils.encodeMessage(MESSAGE_TYPE.askForRefill,refillSpots.removeFirst());
+    if(!ruinCleanSpots.isEmpty()){
+      for(RobotInfo robot : nearbyRobots) {
+        if(robot.getTeam() == rc.getTeam() && robot.getType() == UnitType.MOPPER){
+          int msg = Utils.encodeMessage(MESSAGE_TYPE.sendMopperToClearRuin,ruinCleanSpots.removeFirst());
           rc.sendMessage(robot.getLocation(),msg);
         }
       }
     }
-
 
     rc.setIndicatorString(Arrays.toString(unitsCreated));
   }

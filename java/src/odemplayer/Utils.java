@@ -7,7 +7,6 @@ import java.util.Random;
 import battlecode.common.*;
 
 public class Utils extends Globals {
-  static boolean printed = false;
 
   // TODO: not efficient enough! fix
   // TODO: add actual logic in WhatShouldIbuild, important function.
@@ -208,11 +207,12 @@ public class Utils extends Globals {
   public static UnitType WhatShouldIBuild(RobotController rc, MapLocation location, GAME_PHASE phase){
 
     //dont build defense in early game
-    if(phase == GAME_PHASE.early) for(int i=0; i < idealTowerOrder.size(); i++){
-      System.out.println("early game tower choice");
-      if(idealTowerOrder.get(i) != UnitType.LEVEL_ONE_DEFENSE_TOWER)
-        return idealTowerOrder.get(i);
+    if(phase == GAME_PHASE.early) for (UnitType unitType : idealTowerOrder) {
+      if (unitType != UnitType.LEVEL_ONE_DEFENSE_TOWER) {
+        return unitType;
+      }
     }
+
 
     //build whatever's in queue
     if(!idealTowerOrder.isEmpty())
@@ -268,6 +268,7 @@ public class Utils extends Globals {
     switch(type){
       case MESSAGE_TYPE.buildTowerHere:
       case MESSAGE_TYPE.askForRefill:
+      case MESSAGE_TYPE.sendMopperToClearRuin:
         int x = location.x, y = location.y;
         ret += x*10 + y*1000;
       break;
@@ -319,6 +320,7 @@ public class Utils extends Globals {
 
     for(int i=0; i < idealTowerOrder.size(); i++){
       if(idealTowerOrder.get(i) == type) idealTowerOrder.remove(i);
+      return;
     }
   }
   public static Direction getRandomDirection(RobotController rc) throws GameActionException {

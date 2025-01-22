@@ -22,6 +22,7 @@ public class DecodedMessage<T> extends Globals{
 
         switch(type){
             case MESSAGE_TYPE.buildTowerHere:
+            case MESSAGE_TYPE.sendMopperToClearRuin:
             case MESSAGE_TYPE.askForRefill:
 
                 int x = message % 100;
@@ -31,7 +32,6 @@ public class DecodedMessage<T> extends Globals{
                 data = ((T)new MapLocation(x,y));
                 break;
             case MESSAGE_TYPE.saveChips:
-//                System.out.println("asking to save " + data);
                 data = ((T)Integer.valueOf(message));
                 break;
         }
