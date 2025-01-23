@@ -9,76 +9,51 @@ public class Tower extends Globals {
 
   private enum TOWER_STATE {
     saving,
-    waitAfterSave, // after saving is done, give a soldier a moment to use the money b4 we waste it
+    waitAfterSave,  //after saving is done, give a soldier a moment to use the money b4 we waste it
     normal,
   }
 
-  // state specific
+  //state specific
   static int savingTurns = 0;
   static int saveGoal = 0;
   static ArrayList<MapLocation> refillSpots = new ArrayList<>();
   static ArrayList<MapLocation> ruinSpots = new ArrayList<>();
   static ArrayList<MapLocation> ruinCleanSpots = new ArrayList<>();
 
+  //upgrading
+  static final int[] upgradeCost = {1000,2500,5000};
+  private static boolean shouldSendMopperToCenter = false;
+
   static int[] unitsCreated = new int[3];
   static GAME_PHASE gamePhase = GAME_PHASE.early;
 
-  private static boolean shouldSendMopperToCenter = false;
   private static TOWER_STATE state = TOWER_STATE.normal;
 
-  // TODO: dont create units all the time.
-  // TODO: use current phase
-  // TODO: use smart weighted random for choosing units, or just not random at
-  // all, to avoid extreme cases of too little of a unit.
-  // TODO: send refill message to moppers
-  // TODO: alert units to help build a tower
-
+  // TODO: use smart weighted random for choosing units, or just not random at all, to avoid extreme cases of too little of a unit.
   public static void runTower(RobotController rc) throws GameActionException {
 
     mopperNotifyingCounter -= 1;
-    rc.setIndicatorString("EY Man: " + mopperNotifyingCounter);
-    rc.setIndicatorString(Arrays.toString(unitsCreated));
+    determineIfNeedToSendMoppersToCenter(rc);
 
-    MapLocation location = rc.getLocation();
-    mapWidth = rc.getMapWidth();
-    mapHeight = rc.getMapHeight();
-    mapCenter = new MapLocation(mapWidth / 2, mapHeight / 2);
-
-    float divide = Math.abs((float) location.x / (float) mapWidth);
-
-    // if in map edges send mopper to fight boom boom
-    if (divide <= Math.abs(0.25) || divide >= Math.abs(0.75)) {
-      shouldSendMopperToCenter = true;
-    }
 
     RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
 
     int rounds = rc.getRoundNum();
-    if (rounds > EARLY_GAME_END)
-      gamePhase = GAME_PHASE.mid;
-    if (rounds > MID_GAME_END)
-      gamePhase = GAME_PHASE.late;
+    if(rounds > EARLY_GAME_END) gamePhase = GAME_PHASE.mid;
+    if(rounds > MID_GAME_END) gamePhase = GAME_PHASE.late;
 
     switch (state) {
       case TOWER_STATE.normal:
 
         // apply spawn pattern according to phase.
-        switch (gamePhase) {
-          case GAME_PHASE.early:
-            earlyGameSpawnPattern(rc, unitsCreated);
-            break;
-          case GAME_PHASE.mid:
-            if (rc.getChips() > 1050)
-              attemptCreatingUnits(rc);
-            break;
-          case GAME_PHASE.late:
-            if (rc.getChips() > 1050)
-              attemptCreatingUnits(rc);
-            break;
+        switch(gamePhase) {
+          case GAME_PHASE.early:  earlyGameSpawnPattern(rc, unitsCreated); break;
+          case GAME_PHASE.mid: if(rc.getChips() > 1050) attemptCreatingUnits(rc); break;
+          case GAME_PHASE.late: if(rc.getChips() > 1050) attemptCreatingUnits(rc); break;
         }
 
         break;
-      // ============
+      //============
       case TOWER_STATE.waitAfterSave:
         savingTurns--;
         rc.setIndicatorString("waiting after save for " + savingTurns + "more turns");
@@ -86,7 +61,7 @@ public class Tower extends Globals {
           state = TOWER_STATE.normal;
         }
         break;
-      // ============
+      //============
       case TOWER_STATE.saving:
 
         rc.setIndicatorString("Saving until we reach " + saveGoal);
@@ -98,6 +73,17 @@ public class Tower extends Globals {
         break;
 
     }
+
+    // === UPGRADE === //
+
+    //if able*INSTANT_UPGARDE_MULTI, just do it.
+    int level = rc.getType().level;
+    if(level < 3 && rc.getChips() >= upgradeCost[level]*INSTANT_UPGARDE_MULTI && rc.canUpgradeTower(rc.getLocation()))// && gamePhase != GAME_PHASE.early)
+    {
+      rc.upgradeTower(rc.getLocation());
+      System.out.println("upgrading");
+    }
+
 
     // === ATTACK === //
 
@@ -120,12 +106,12 @@ public class Tower extends Globals {
       MESSAGE_TYPE type = message.type;
       switch (type) {
         case MESSAGE_TYPE.saveChips:
-          saveGoal = (int) message.data;
+          saveGoal = (int)message.data;
           state = TOWER_STATE.saving;
           break;
 
         case MESSAGE_TYPE.askForRefill:
-          refillSpots.add((MapLocation) message.data);
+          refillSpots.add((MapLocation)message.data);
           break;
 
         case MESSAGE_TYPE.buildTowerHere:
@@ -139,74 +125,65 @@ public class Tower extends Globals {
 
     }
 
-    // Send messages
-    // we wont send multipile missions to single robots, so the order of these
-    // indicate priority.
-    // we can later maybe genelerize it using some list but for now it seems
-    // overkill.
 
-    // send robots to help build a ruin
-    for (RobotInfo robot : nearbyRobots) {
-      if (!ruinSpots.isEmpty()) {
-        if (robot.getTeam() == rc.getTeam()
-            && (double) robot.getPaintAmount() / robot.type.paintCapacity >= SOLDIER_PAINT_FOR_TASK
-            && robot.type == UnitType.SOLDIER) {
-          // im not checking also whether i can send him a message cuz im pretty sure
-          // "sense <=> can send" but look out for exceptions.
-          int msg = Utils.encodeMessage(MESSAGE_TYPE.buildTowerHere, ruinSpots.removeFirst());
-          rc.sendMessage(robot.getLocation(), msg);
-        }
-      }
+    //Send messages
+    //we wont send multipile missions to single robots, so the order of these indicate priority.
+    //we can later maybe genelerize it using some list but for now it seems overkill.
 
-      if (robot.getTeam() == rc.getTeam()
-          && robot.type == UnitType.MOPPER && shouldSendMopperToCenter) {
-
-        int plusOrMinus = (int) (Math.random() * 10) > 4 ? 1 : -1;
-        MapLocation adjustedLocation = new MapLocation(mapCenter.x + (int) (Math.random() * 5 * plusOrMinus),
-            (int) (mapHeight * (Math.random())));
-        int msg = Utils.encodeMessage(MESSAGE_TYPE.sendMopperToCenterOfMap, adjustedLocation);
-        if (rc.canSendMessage(robot.getLocation())) {
-          rc.setIndicatorString("SENDING GET TO CENTER: " + adjustedLocation);
-          rc.sendMessage(robot.getLocation(), msg);
-          mopperNotifyingCounter = 30;
-        }
-      }
-
-      if (!ruinCleanSpots.isEmpty()) {
-        if (robot.getTeam() == rc.getTeam() && robot.getType() == UnitType.MOPPER) {
-          int msg = Utils.encodeMessage(MESSAGE_TYPE.sendMopperToClearRuin, ruinCleanSpots.removeFirst());
-          rc.sendMessage(robot.getLocation(), msg);
+    //send robots to help build a ruin
+    if(!ruinSpots.isEmpty()){
+      for(RobotInfo robot : nearbyRobots){
+        if(robot.getTeam() == rc.getTeam() && (double) robot.getPaintAmount() / robot.type.paintCapacity >= SOLDIER_PAINT_FOR_TASK
+                && robot.type == UnitType.SOLDIER && !ruinSpots.isEmpty() && rc.canSendMessage(robot.getLocation())){
+          //im not checking also whether i can send him a message cuz im pretty sure "sense <=> can send" but look out for exceptions.
+          int msg = Utils.encodeMessage(MESSAGE_TYPE.buildTowerHere,ruinSpots.removeFirst());
+          rc.sendMessage(robot.getLocation(),msg);
         }
       }
     }
+    //send moppers to clean ruins
+    if (!ruinCleanSpots.isEmpty()) {
+      for (RobotInfo robot : nearbyRobots) {
+        if (robot.getTeam() == rc.getTeam() && robot.getType() == UnitType.MOPPER && !ruinCleanSpots.isEmpty()
+            && rc.canSendMessage(robot.getLocation())) {
+          int msg = Utils.encodeMessage(MESSAGE_TYPE.sendMopperToClearRuin, ruinCleanSpots.removeFirst());
+          rc.sendMessage(robot.getLocation(), msg);
 
+        }
+      }
+      if (shouldSendMopperToCenter) {
+        for (RobotInfo robot : nearbyRobots) {
+          if (shouldSendMopperToCenter && robot.getTeam() == rc.getTeam()
+              && robot.type == UnitType.MOPPER) {
+            sendMopperToCenterOfMap(rc, robot);
+          }
+        }
+      }
+    rc.setIndicatorString(Arrays.toString(unitsCreated));}
+      
   }
 
-  /********************************************
-   * METHODS
-   ******************************************/
+
+  /******************************************** METHODS ******************************************/
 
   private static void attemptCreatingUnits(RobotController rc) throws GameActionException {
     Direction dir = directions[rng.nextInt(directions.length)];
     MapLocation nextLocation = rc.getLocation().add(dir);
     int robotType = rng.nextInt(4);
 
-    if (robotType <= 1 && rc.canBuildRobot(EARLY_GAME_MAIN_UNIT, nextLocation)
-        && rc.senseRobotAtLocation(nextLocation) == null) {
+    if (robotType <= 1 && rc.canBuildRobot(EARLY_GAME_MAIN_UNIT, nextLocation) && rc.senseRobotAtLocation(nextLocation) == null) {
       rc.buildRobot(EARLY_GAME_MAIN_UNIT, nextLocation);
       System.out.println("BUILT A " + EARLY_GAME_MAIN_UNIT.name());
       unitsCreated[EARLY_GAME_MAIN_UNIT.ordinal()]++;
     }
 
-    else if (robotType == 2 && rc.canBuildRobot(EARLY_GAME_LAST_UNIT, nextLocation)
-        && rc.senseRobotAtLocation(nextLocation) == null) {
+    else if (robotType == 2 && rc.canBuildRobot(EARLY_GAME_LAST_UNIT, nextLocation) && rc.senseRobotAtLocation(nextLocation) == null) {
       rc.buildRobot(EARLY_GAME_LAST_UNIT, nextLocation);
       System.out.println("BUILT A " + EARLY_GAME_LAST_UNIT.name());
       unitsCreated[EARLY_GAME_LAST_UNIT.ordinal()]++;
     }
 
-    else if (robotType == 3 && rc.canBuildRobot(EARLY_GAME_SECONDARY_UNIT, nextLocation)
-        && rc.senseRobotAtLocation(nextLocation) == null) {
+    else if (robotType == 3 && rc.canBuildRobot(EARLY_GAME_SECONDARY_UNIT, nextLocation) && rc.senseRobotAtLocation(nextLocation) == null) {
       rc.buildRobot(EARLY_GAME_SECONDARY_UNIT, nextLocation);
       System.out.println("BUILT A " + EARLY_GAME_SECONDARY_UNIT.name());
       unitsCreated[EARLY_GAME_SECONDARY_UNIT.ordinal()]++;
@@ -225,11 +202,39 @@ public class Tower extends Globals {
 
   }
 
+  private static void determineIfNeedToSendMoppersToCenter(RobotController rc){
+    MapLocation location = rc.getLocation();
+    mapWidth = rc.getMapWidth();
+    mapHeight = rc.getMapHeight();
+    mapCenter = new MapLocation(mapWidth / 2, mapHeight / 2);
+
+    float divide = Math.abs((float) location.x / (float) mapWidth);
+
+    // if in map edges send mopper to fight boom boom
+    if (divide <= Math.abs(0.25) || divide >= Math.abs(0.75)) {
+      shouldSendMopperToCenter = true;
+    }
+
+  }
+
+  private static void sendMopperToCenterOfMap(RobotController rc, RobotInfo robot) throws GameActionException{
+        int plusOrMinus = (int) (Math.random() * 10) > 4 ? 1 : -1;
+        MapLocation adjustedLocation = new MapLocation(mapCenter.x + (int) (Math.random() * 5 * plusOrMinus),
+            (int) (mapHeight * (Math.random())));
+        int msg = Utils.encodeMessage(MESSAGE_TYPE.sendMopperToCenterOfMap, adjustedLocation);
+        if (rc.canSendMessage(robot.getLocation())) {
+          rc.setIndicatorString("SENDING GET TO CENTER: " + adjustedLocation);
+          rc.sendMessage(robot.getLocation(), msg);
+          mopperNotifyingCounter = 30;
+        }
+
+  }
+
   private static void earlyGameSpawnPattern(RobotController rc, int[] spawnsCount) throws GameActionException {
 
-    // find spawnset according to my type
+    //find spawnset according to my type
     int[] spawnset = EARLY_PAINT_SPAWNS;
-    switch (rc.getType()) {
+    switch(rc.getType()){
       case UnitType.LEVEL_ONE_PAINT_TOWER:
       case UnitType.LEVEL_TWO_PAINT_TOWER:
       case UnitType.LEVEL_THREE_PAINT_TOWER:
@@ -244,16 +249,13 @@ public class Tower extends Globals {
         spawnset = EARLY_DEFENSE_SPAWNS;
     }
 
-    // spawn units if need more
-    if (spawnsCount[UnitType.SOLDIER.ordinal()] < spawnset[UnitType.SOLDIER.ordinal()])
-      attemptCreatingUnits(rc, UnitType.SOLDIER);
-    if (spawnsCount[UnitType.MOPPER.ordinal()] < spawnset[UnitType.MOPPER.ordinal()])
-      attemptCreatingUnits(rc, UnitType.MOPPER);
-    if (spawnsCount[UnitType.SPLASHER.ordinal()] < spawnset[UnitType.SPLASHER.ordinal()])
-      attemptCreatingUnits(rc, UnitType.SPLASHER);
+    //spawn units if need more
+    if(spawnsCount[UnitType.SOLDIER.ordinal()] < spawnset[UnitType.SOLDIER.ordinal()])    attemptCreatingUnits(rc,UnitType.SOLDIER);
+    if(spawnsCount[UnitType.MOPPER.ordinal()]  < spawnset[UnitType.MOPPER.ordinal()])     attemptCreatingUnits(rc,UnitType.MOPPER);
+    if(spawnsCount[UnitType.SPLASHER.ordinal()] < spawnset[UnitType.SPLASHER.ordinal()])  attemptCreatingUnits(rc,UnitType.SPLASHER);
 
-    // spawn extra
-    if (rc.getChips() >= EARLY_CHIPS_THRESHOLD && rc.getPaint() >= EARLY_PAINT_THRESHOLD) {
+    //spawn extra
+    if(rc.getChips() >= EARLY_CHIPS_THRESHOLD && rc.getPaint() >= EARLY_PAINT_THRESHOLD){
       attemptCreatingUnits(rc);
     }
   }

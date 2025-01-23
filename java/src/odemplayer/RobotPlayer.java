@@ -16,6 +16,13 @@ public class RobotPlayer extends Globals {
         Mopper.determineMopperRole(rc);
     }
 
+    //update idle
+    if(rc.getLocation() == prevLocation)
+      idleTime++;
+    else
+      idleTime = 0;
+    prevLocation = rc.getLocation();
+
     while (true) {
       turnCount++;
       try {
