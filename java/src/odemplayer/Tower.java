@@ -32,6 +32,10 @@ public class Tower extends Globals {
   // TODO: use smart weighted random for choosing units, or just not random at all, to avoid extreme cases of too little of a unit.
   public static void runTower(RobotController rc) throws GameActionException {
 
+    mopperNotifyingCounter -= 1;
+    determineIfNeedToSendMoppersToCenter(rc);
+
+
     RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
 
     int rounds = rc.getRoundNum();
@@ -138,16 +142,25 @@ public class Tower extends Globals {
       }
     }
     //send moppers to clean ruins
-    if(!ruinCleanSpots.isEmpty()){
-      for(RobotInfo robot : nearbyRobots) {
-        if(robot.getTeam() == rc.getTeam() && robot.getType() == UnitType.MOPPER && !ruinCleanSpots.isEmpty() && rc.canSendMessage(robot.getLocation())){
-          int msg = Utils.encodeMessage(MESSAGE_TYPE.sendMopperToClearRuin,ruinCleanSpots.removeFirst());
-          rc.sendMessage(robot.getLocation(),msg);
+    if (!ruinCleanSpots.isEmpty()) {
+      for (RobotInfo robot : nearbyRobots) {
+        if (robot.getTeam() == rc.getTeam() && robot.getType() == UnitType.MOPPER && !ruinCleanSpots.isEmpty()
+            && rc.canSendMessage(robot.getLocation())) {
+          int msg = Utils.encodeMessage(MESSAGE_TYPE.sendMopperToClearRuin, ruinCleanSpots.removeFirst());
+          rc.sendMessage(robot.getLocation(), msg);
+
         }
       }
-    }
-
-    rc.setIndicatorString(Arrays.toString(unitsCreated));
+      if (shouldSendMopperToCenter) {
+        for (RobotInfo robot : nearbyRobots) {
+          if (shouldSendMopperToCenter && robot.getTeam() == rc.getTeam()
+              && robot.type == UnitType.MOPPER) {
+            sendMopperToCenterOfMap(rc, robot);
+          }
+        }
+      }
+    rc.setIndicatorString(Arrays.toString(unitsCreated));}
+      
   }
 
 
@@ -188,6 +201,35 @@ public class Tower extends Globals {
     }
 
   }
+
+  private static void determineIfNeedToSendMoppersToCenter(RobotController rc){
+    MapLocation location = rc.getLocation();
+    mapWidth = rc.getMapWidth();
+    mapHeight = rc.getMapHeight();
+    mapCenter = new MapLocation(mapWidth / 2, mapHeight / 2);
+
+    float divide = Math.abs((float) location.x / (float) mapWidth);
+
+    // if in map edges send mopper to fight boom boom
+    if (divide <= Math.abs(0.25) || divide >= Math.abs(0.75)) {
+      shouldSendMopperToCenter = true;
+    }
+
+  }
+
+  private static void sendMopperToCenterOfMap(RobotController rc, RobotInfo robot) throws GameActionException{
+        int plusOrMinus = (int) (Math.random() * 10) > 4 ? 1 : -1;
+        MapLocation adjustedLocation = new MapLocation(mapCenter.x + (int) (Math.random() * 5 * plusOrMinus),
+            (int) (mapHeight * (Math.random())));
+        int msg = Utils.encodeMessage(MESSAGE_TYPE.sendMopperToCenterOfMap, adjustedLocation);
+        if (rc.canSendMessage(robot.getLocation())) {
+          rc.setIndicatorString("SENDING GET TO CENTER: " + adjustedLocation);
+          rc.sendMessage(robot.getLocation(), msg);
+          mopperNotifyingCounter = 30;
+        }
+
+  }
+
   private static void earlyGameSpawnPattern(RobotController rc, int[] spawnsCount) throws GameActionException {
 
     //find spawnset according to my type
