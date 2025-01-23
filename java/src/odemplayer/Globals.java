@@ -85,6 +85,7 @@ public class Globals {
 
   //dest roam
   static MapLocation roamDestDest = null;
+  static boolean reachedCenter = false;   //if used dest roam and reached the center of the map once, use a different roam.
 
   //general roam
   static int idleTime = 0;
@@ -130,7 +131,7 @@ public class Globals {
   static final UnitType EARLY_GAME_LAST_UNIT = UnitType.SPLASHER;
   static final int EARLY_CHIPS_THRESHOLD = 1200;
   static final int EARLY_PAINT_THRESHOLD = 300;
-  static final double INSTANT_UPGARDE_MULTI = 2;
+  static final double INSTANT_UPGARDE_MULTI = 1.4;
 
   // at the start of the game, towers will only spawn these units,
   // and spawn more only if they have over EARLY_CHIPS_THRESHOLD.

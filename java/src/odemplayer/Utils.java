@@ -2,6 +2,7 @@ package odemplayer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Random;
 
 import battlecode.common.*;
 
@@ -104,7 +105,6 @@ public class Utils extends Globals {
   public static MapLocation roamDest(RobotController rc) throws GameActionException{
     if(roamDestDest == null || rc.getLocation().distanceSquaredTo(roamDestDest) < 3 || (rc.canSenseLocation(roamDestDest) && rc.isLocationOccupied(roamDestDest)))
     {
-      Random r = new Random();
       int w = rc.getMapWidth();
       int h = rc.getMapHeight();
       int x = (int)(0.3*w + Math.random()*0.4*w);

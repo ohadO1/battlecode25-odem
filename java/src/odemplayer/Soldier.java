@@ -141,12 +141,15 @@ class Soldier extends Globals {
         //if didn't find ruin, wander around.
         else {
           MapLocation nextLoc = null;
-          switch (gamePhase){
-            case GAME_PHASE.early -> nextLoc = Utils.roamCircle(rc);
-            case GAME_PHASE.mid -> nextLoc = Utils.roamDest(rc);
-            case GAME_PHASE.late -> nextLoc = Utils.roamDest(rc);
-          }
 
+          if(gamePhase == GAME_PHASE.early)
+          {
+            nextLoc = Utils.roamCircle(rc);
+          }
+          else if(!reachedCenter){
+            nextLoc = Utils.roamDest(rc);
+          }
+          else nextLoc = Utils.roamGracefullyf(rc);
 
           if (rc.canAttack(nextLoc)) {
             MapInfo nextLocInfo = rc.senseMapInfo(nextLoc);
