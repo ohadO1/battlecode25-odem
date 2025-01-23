@@ -22,6 +22,7 @@ public class Tower extends Globals {
 
   //upgrading
   static final int[] upgradeCost = {1000,2500,5000};
+  private static boolean shouldSendMopperToCenter = false;
 
   static int[] unitsCreated = new int[3];
   static GAME_PHASE gamePhase = GAME_PHASE.early;
