@@ -30,6 +30,7 @@ public class Globals {
     buildTowerHere,
     attackTower,
     sendMopperToClearRuin,
+    sendMopperToCenterOfMap
   }
 
   // in the encoder/decoder, use: messageTypesIndexes.indexOf(type) to get a
@@ -160,4 +161,15 @@ public class Globals {
 
   /*** mopper ***/
   static final double MOPPER_PAINT_FOR_CASUAL_REFILL = 0.3;
+
+
+  /*** Tower **/
+  static int mapWidth;
+  static int mapHeight;
+  static MapLocation towerLocation; 
+  static int distanceFromCenter;
+  static int mopperNotifyingCounter = 0;
+
+/** Tower + Mopper **/
+  static MapLocation mapCenter;
 }

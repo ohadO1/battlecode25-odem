@@ -2,7 +2,6 @@ package odemplayer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Random;
 
 import battlecode.common.*;
 
@@ -285,6 +284,7 @@ public class Utils extends Globals {
     switch(type){
       case MESSAGE_TYPE.buildTowerHere:
       case MESSAGE_TYPE.askForRefill:
+      case MESSAGE_TYPE.sendMopperToCenterOfMap:
       case MESSAGE_TYPE.sendMopperToClearRuin:
         int x = location.x, y = location.y;
         ret += x*10 + y*1000;
@@ -296,6 +296,7 @@ public class Utils extends Globals {
 
     return ret;
   }
+
   public static int encodeMessage(MESSAGE_TYPE type, int amount){  //ask for refill
     int ret = type.ordinal();
 
