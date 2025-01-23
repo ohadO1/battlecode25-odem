@@ -2,6 +2,8 @@ package odemplayer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Collections;
 import java.util.Random;
 
 import battlecode.common.*;
@@ -185,7 +187,6 @@ public class Utils extends Globals {
     return ret;
   }
   public static MapLocation mopperRoam(RobotController rc) throws GameActionException {
-    MapLocation unitLocation = rc.getLocation();
 
     MapInfo[] nearbyTiles = rc.senseNearbyMapInfos(2);
 
@@ -193,29 +194,57 @@ public class Utils extends Globals {
       MapLocation closestTower = findClosestTower(knownTowersInfos, rc);
       PathFinder.moveToLocation(rc, closestTower);
       return null;
+     }
+    //
+    //
+    // int unitCounter = 0;
+
+    //TODO: not sure if needed
+    // for (RobotInfo robot : rc.senseNearbyRobots()) {
+    //   if(robot.getType().isRobotType() && robot.getTeam() == rc.getTeam()){
+    //     unitCounter++;
+    //   }
+    //   if (unitCounter > 20) {
+    //     Direction oppositeDir = rc.getLocation().directionTo(robot.getLocation()).opposite();
+    //     if (rc.canMove(oppositeDir)) {
+    //       rc.move(oppositeDir);
+    //     }
+    //   }
+    // }
+    //
+    //
+    //
+    for (MapInfo tile : nearbyTiles) {
+      // if (tile.isWall() && rc.getLocation().distanceSquaredTo(tile.getMapLocation()) <= 1) {
+      //   MapLocation wallLocation = tile.getMapLocation();
+      //   Direction dir = rc.getLocation().directionTo(wallLocation).opposite();
+      //   if (rc.canMove(dir)) {
+      //     rc.setIndicatorDot(rc.getLocation(), 0, 0, 255);
+      //     rc.move(dir);
+      //     return rc.getLocation().add(dir);
+      //   }
+      //   return null;
+      // }
     }
 
-    for (MapInfo tile : nearbyTiles) {
-      if (tile.isWall()) {
-        MapLocation wallLocation = tile.getMapLocation();
-        Direction dir = rc.getLocation().directionTo(wallLocation).opposite();
-        if (rc.canMove(dir)) {
-
-          rc.setIndicatorDot(rc.getLocation(), 0, 0, 255);
-          rc.move(dir);
-          return rc.getLocation().add(dir);
-        }
-        return null;
+   List<Direction> dirs = Arrays.asList(directions);
+    Collections.shuffle(dirs);
+    for (Direction dir :  directions) {
+      MapLocation newLocation = rc.getLocation().add(dir);
+      if (rc.canSenseLocation(newLocation) && rc.senseMapInfo(newLocation).getPaint().isAlly() && rc.canMove(dir)) {
+        rc.move(dir);
+        return rc.getLocation().add(dir);
+      }
+    }
+    for (MapInfo maploc : rc.senseNearbyMapInfos(4)) {
+      Direction dir = rc.getLocation().directionTo(maploc.getMapLocation());
+      if (rc.canMove(dir)) {
+        rc.move(dir);
       }
     }
 
-    Direction dir = directions[rng.nextInt(directions.length)];
 
-    if (rc.canMove(dir)) {
-      rc.move(dir);
-    }
-
-    return rc.getLocation().add(dir);
+    return null;
   }
 
   /****************** decision making functions ****************************/

@@ -40,8 +40,10 @@ public class Mopper extends Globals {
 
   private static MOPPER_ROLES role = MOPPER_ROLES.normal;
   private static MapLocation tileToAttack = null;
-  private static MapLocation ruinDest = null;
+  private static MapInfo ruinDest = null;
   private static MOPPER_STATE state = MOPPER_STATE.roam;
+  private static MapLocation notifyDest;
+  private static MapLocation safeRoamLoc;
   static MOPPER_STATE statePrev = state;
   static MapLocation goToTileDest;
   private static MapLocation towerDestination = null;
@@ -49,9 +51,11 @@ public class Mopper extends Globals {
   static RobotInfo allyToRefill = null;
   static int refillWait = 0;
   static RobotInfo refillTower;
+  static int notifyTowerCooldown = 500;
   static int goToTileTurns = 10;
 
   public static void runMopper(RobotController rc) throws GameActionException {
+    notifyTowerCooldown--;
     Utils.updateFriendlyTowers(rc);
     // TODO: add a role that will support soldiers and refill them from tower
     // contantly
@@ -62,6 +66,7 @@ public class Mopper extends Globals {
     switch (state) {
       case roam:
         // remain only in our tiles
+        rc.setIndicatorString("in roam");
         Utils.mopperRoam(rc);
 
         boolean didFindEnemyTower = false;
@@ -72,9 +77,32 @@ public class Mopper extends Globals {
           }
         }
 
-        MapInfo closestTileForAction;
         for (MapInfo tile : rc.senseNearbyMapInfos()) {
-          RobotInfo potentialEnemy = rc.senseRobotAtLocation(tile.getMapLocation());
+          // RobotInfo potentialEnemy = rc.senseRobotAtLocation(tile.getMapLocation());
+          //
+          if (rc.senseMapInfo(rc.getLocation()).getPaint().isAlly() && tileToAttack == null
+              && tile.getPaint().isEnemy()) {
+            if (!didFindEnemyTower) {
+              safeRoamLoc = rc.getLocation();
+              state = MOPPER_STATE.attackTile;
+              if (tileToAttack == null) {
+                tileToAttack = tile.getMapLocation();
+              } else {
+                tileToAttack = rc.getLocation().distanceSquaredTo(tile.getMapLocation()) < rc.getLocation()
+                    .distanceSquaredTo(tileToAttack) ? tile.getMapLocation() : tileToAttack;
+              }
+            }
+            break;
+          }
+
+          if (tile.hasRuin() && rc.senseRobotAtLocation(tile.getMapLocation()) == null && notifyTowerCooldown <= 0) {
+            state = MOPPER_STATE.notifyTower;
+            notifyDest = Utils.findClosestTower(knownTowersInfos, rc);
+            ruinDest = tile;
+            PathFinder.moveToLocation(rc, notifyDest);
+            notifyTowerCooldown = 500;
+            break;
+          }
           // if (potentialEnemy != null && (potentialEnemy.team != rc.getTeam())) {
           // TODO: understand cooldown and mopswing penalty
           // if
@@ -85,19 +113,9 @@ public class Mopper extends Globals {
           // }
           // }
 
-          if (rc.senseMapInfo(rc.getLocation()).getPaint().isAlly() && tileToAttack == null
-              && tile.getPaint().isEnemy()) {
-            if (!didFindEnemyTower) {
-              state = MOPPER_STATE.attackTile;
-              if (tileToAttack == null) {
-                tileToAttack = tile.getMapLocation();
-              } else {
-                tileToAttack = rc.getLocation().distanceSquaredTo(tile.getMapLocation()) < rc.getLocation()
-                    .distanceSquaredTo(tileToAttack) ? tile.getMapLocation() : tileToAttack;
-              }
-              break;
-            }
-          }
+        }
+        if (tileToAttack != null) {
+          break;
         }
 
         // transfer paint
@@ -108,6 +126,7 @@ public class Mopper extends Globals {
               if (((double) robot.getPaintAmount()) / robot.getType().paintCapacity <= 0.3 || rc.getPaint() <= 30) {
                 state = MOPPER_STATE.refillAlly;
                 allyToRefill = robot;
+                break;
               }
             }
           }
@@ -149,24 +168,55 @@ public class Mopper extends Globals {
         break;
 
       case attackTile:
-        rc.setIndicatorString("attackTile");
+        rc.setIndicatorString("in attack tile");
         if (!rc.canAttack(tileToAttack)) {
+          rc.setIndicatorString("in path finder: " + tileToAttack);
           PathFinder.moveToLocation(rc, tileToAttack);
           break;
-        } else
+        } else {
+          rc.setIndicatorString("in else");
           rc.attack(tileToAttack);
-        tileToAttack = null;
-        state = MOPPER_STATE.roam;
-        break;
+          for (MapInfo loc : rc.senseNearbyMapInfos(3)) {
+            if (loc.getPaint().isEnemy()) {
+              tileToAttack = loc.getMapLocation();
+              PathFinder.moveToLocation(rc, tileToAttack);
+              break;
+            }
+          }
+          tileToAttack = null;
+          state = MOPPER_STATE.roam;
+          break;
+        }
 
       case goToTile:
+        rc.setIndicatorString("in attack tile");
         if (goToTileTurns == 0 || !rc.senseMapInfo(rc.getLocation()).getPaint().isAlly()) {
           state = MOPPER_STATE.roam;
-          goToTileTurns = 10;
+          goToTileTurns = 13;
+          goToTileDest = null;
+          break;
         }
         rc.setIndicatorString("IN GO TO TILE" + goToTileDest);
         PathFinder.moveToLocation(rc, goToTileDest);
         goToTileTurns -= 1;
+        break;
+
+      case notifyTower:
+        rc.setIndicatorString("in notifyTower");
+
+        if (stateChanged)
+          notifyDest = Utils.findClosestTower(knownTowersInfos, rc);
+
+        // goto dest
+        PathFinder.moveToLocation(rc, notifyDest);
+
+        // reach dest, send message.
+        if (rc.canSendMessage(notifyDest)) {
+          rc.sendMessage(notifyDest, Utils.encodeMessage(MESSAGE_TYPE.buildTowerHere, ruinDest.getMapLocation()));
+          state = MOPPER_STATE.roam;
+          notifyTowerCooldown = 500;
+        }
+
         break;
 
       default:
