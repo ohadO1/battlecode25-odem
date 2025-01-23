@@ -27,6 +27,7 @@ public class Mopper extends Globals {
     attackTile,
     refillAlly,
     enemyDetected,
+    clearRuin,
     goToTile
   }
 
@@ -78,8 +79,6 @@ public class Mopper extends Globals {
         }
 
         for (MapInfo tile : rc.senseNearbyMapInfos()) {
-          // RobotInfo potentialEnemy = rc.senseRobotAtLocation(tile.getMapLocation());
-          //
           if (rc.senseMapInfo(rc.getLocation()).getPaint().isAlly() && tileToAttack == null
               && tile.getPaint().isEnemy()) {
             if (!didFindEnemyTower) {
@@ -92,9 +91,13 @@ public class Mopper extends Globals {
                     .distanceSquaredTo(tileToAttack) ? tile.getMapLocation() : tileToAttack;
               }
             }
-            break;
           }
+        }
+        if (tileToAttack != null) {
+          break;
+        }
 
+        for (MapInfo tile : rc.senseNearbyMapInfos()) {
           if (tile.hasRuin() && rc.senseRobotAtLocation(tile.getMapLocation()) == null && notifyTowerCooldown <= 0) {
             state = MOPPER_STATE.notifyTower;
             notifyDest = Utils.findClosestTower(knownTowersInfos, rc);
@@ -103,19 +106,6 @@ public class Mopper extends Globals {
             notifyTowerCooldown = 500;
             break;
           }
-          // if (potentialEnemy != null && (potentialEnemy.team != rc.getTeam())) {
-          // TODO: understand cooldown and mopswing penalty
-          // if
-          // (rc.canMopSwing(rc.getLocation().directionTo(potentialEnemy.getLocation())))
-          // {
-          // rc.mopSwing(rc.getLocation().directionTo(potentialEnemy.getLocation()));
-          // return;
-          // }
-          // }
-
-        }
-        if (tileToAttack != null) {
-          break;
         }
 
         // transfer paint
@@ -169,6 +159,19 @@ public class Mopper extends Globals {
 
       case attackTile:
         rc.setIndicatorString("in attack tile");
+        // if a tower is too close to the tile stop trying to remove the paint
+        Direction dir = rc.getLocation().directionTo(tileToAttack);
+        for (RobotInfo robot : rc.senseNearbyRobots(4)) {
+          if (rc.getLocation().add(dir).distanceSquaredTo(robot.getLocation()) < 3 && robot.getType().isTowerType()
+              && robot.getTeam() != rc.getTeam()) {
+            if (rc.canMove(dir.opposite())) {
+              rc.move(dir.opposite());
+            }
+            tileToAttack = null;
+            state = MOPPER_STATE.roam;
+            break;
+          }
+        }
         if (!rc.canAttack(tileToAttack)) {
           rc.setIndicatorString("in path finder: " + tileToAttack);
           PathFinder.moveToLocation(rc, tileToAttack);
@@ -179,7 +182,6 @@ public class Mopper extends Globals {
           for (MapInfo loc : rc.senseNearbyMapInfos(3)) {
             if (loc.getPaint().isEnemy()) {
               tileToAttack = loc.getMapLocation();
-              PathFinder.moveToLocation(rc, tileToAttack);
               break;
             }
           }
@@ -230,8 +232,8 @@ public class Mopper extends Globals {
       MESSAGE_TYPE type = message.type;
       switch (type) {
         case MESSAGE_TYPE.sendMopperToClearRuin:
-          tileToAttack = (MapLocation) message.data;
-          state = MOPPER_STATE.attackTile;
+          goToTileDest = (MapLocation) message.data;
+          state = MOPPER_STATE.goToTile;
           break;
         case MESSAGE_TYPE.sendMopperToCenterOfMap:
           if (goToTileDest == null) {
