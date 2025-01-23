@@ -44,7 +44,7 @@ public class Tower extends Globals {
     mapHeight = rc.getMapHeight();
     mapCenter = new MapLocation(mapWidth / 2, mapHeight / 2);
 
-    float divide = Math.abs((float)location.x / (float)mapWidth);
+    float divide = Math.abs((float) location.x / (float) mapWidth);
 
     // if in map edges send mopper to fight boom boom
     if (divide <= Math.abs(0.25) || divide >= Math.abs(0.75)) {
@@ -163,7 +163,7 @@ public class Tower extends Globals {
 
         int plusOrMinus = (int) (Math.random() * 10) > 4 ? 1 : -1;
         MapLocation adjustedLocation = new MapLocation(mapCenter.x + (int) (Math.random() * 5 * plusOrMinus),
-            mapCenter.y + (int) (Math.random() * 5 * plusOrMinus));
+            (int) (mapHeight * (Math.random())));
         int msg = Utils.encodeMessage(MESSAGE_TYPE.sendMopperToCenterOfMap, adjustedLocation);
         if (rc.canSendMessage(robot.getLocation())) {
           rc.setIndicatorString("SENDING GET TO CENTER: " + adjustedLocation);

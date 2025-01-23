@@ -1,9 +1,5 @@
 package odemplayer;
 
-import java.util.ArrayList;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
-
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapInfo;
@@ -68,6 +64,15 @@ public class Mopper extends Globals {
         // remain only in our tiles
         Utils.mopperRoam(rc);
 
+        boolean didFindEnemyTower = false;
+
+        for (RobotInfo robot : rc.senseNearbyRobots(4)) {
+          if (robot.getType().isTowerType() && robot.getTeam() != rc.getTeam()) {
+            didFindEnemyTower = true;
+          }
+        }
+
+        MapInfo closestTileForAction;
         for (MapInfo tile : rc.senseNearbyMapInfos()) {
           RobotInfo potentialEnemy = rc.senseRobotAtLocation(tile.getMapLocation());
           // if (potentialEnemy != null && (potentialEnemy.team != rc.getTeam())) {
@@ -79,11 +84,19 @@ public class Mopper extends Globals {
           // return;
           // }
           // }
+
           if (rc.senseMapInfo(rc.getLocation()).getPaint().isAlly() && tileToAttack == null
               && tile.getPaint().isEnemy()) {
-            state = MOPPER_STATE.attackTile;
-            tileToAttack = tile.getMapLocation();
-            PathFinder.moveToLocation(rc, tileToAttack);
+            if (!didFindEnemyTower) {
+              state = MOPPER_STATE.attackTile;
+              if (tileToAttack == null) {
+                tileToAttack = tile.getMapLocation();
+              } else {
+                tileToAttack = rc.getLocation().distanceSquaredTo(tile.getMapLocation()) < rc.getLocation()
+                    .distanceSquaredTo(tileToAttack) ? tile.getMapLocation() : tileToAttack;
+              }
+              break;
+            }
           }
         }
 
@@ -110,10 +123,14 @@ public class Mopper extends Globals {
       case refillAlly:
         rc.setIndicatorString("in refillAlly");
         int numToTransfer = rc.getPaint() > 60 ? 50 : rc.getPaint();
-        for (RobotInfo robot : rc.senseNearbyRobots(4)) {
+        for (RobotInfo robot : rc.senseNearbyRobots(5)) {
           if (robot.getType().isTowerType() && robot.getTeam() != rc.getTeam()) {
             allyToRefill = null;
             state = MOPPER_STATE.roam;
+            Direction towerDirection = rc.getLocation().directionTo(robot.getLocation());
+            if (rc.canMove(towerDirection.opposite())) {
+              rc.move(towerDirection.opposite());
+            }
             break;
           }
         }
@@ -167,8 +184,10 @@ public class Mopper extends Globals {
           state = MOPPER_STATE.attackTile;
           break;
         case MESSAGE_TYPE.sendMopperToCenterOfMap:
-          goToTileDest = (MapLocation) message.data;
-          state = MOPPER_STATE.goToTile;
+          if (goToTileDest == null) {
+            goToTileDest = (MapLocation) message.data;
+            state = MOPPER_STATE.goToTile;
+          }
           break;
       }
 
