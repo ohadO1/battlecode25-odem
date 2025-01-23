@@ -20,16 +20,15 @@ public class Tower extends Globals {
   static ArrayList<MapLocation> ruinSpots = new ArrayList<>();
   static ArrayList<MapLocation> ruinCleanSpots = new ArrayList<>();
 
+  //upgrading
+  static final int[] upgradeCost = {1000,2500,5000};
+
   static int[] unitsCreated = new int[3];
   static GAME_PHASE gamePhase = GAME_PHASE.early;
 
   private static TOWER_STATE state = TOWER_STATE.normal;
 
-  // TODO: dont create units all the time.
-  // TODO: use current phase
   // TODO: use smart weighted random for choosing units, or just not random at all, to avoid extreme cases of too little of a unit.
-  // TODO: send refill message to moppers
-  // TODO: alert units to help build a tower
   public static void runTower(RobotController rc) throws GameActionException {
 
     RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
@@ -69,6 +68,17 @@ public class Tower extends Globals {
         break;
 
     }
+
+    // === UPGRADE === //
+
+    //if able*INSTANT_UPGARDE_MULTI, just do it.
+    int level = rc.getType().level;
+    if(level < 3 && rc.getChips() >= upgradeCost[level]*INSTANT_UPGARDE_MULTI && rc.canUpgradeTower(rc.getLocation()))// && gamePhase != GAME_PHASE.early)
+    {
+      rc.upgradeTower(rc.getLocation());
+      System.out.println("upgrading");
+    }
+
 
     // === ATTACK === //
 
@@ -119,7 +129,7 @@ public class Tower extends Globals {
     if(!ruinSpots.isEmpty()){
       for(RobotInfo robot : nearbyRobots){
         if(robot.getTeam() == rc.getTeam() && (double) robot.getPaintAmount() / robot.type.paintCapacity >= SOLDIER_PAINT_FOR_TASK
-                && robot.type == UnitType.SOLDIER){
+                && robot.type == UnitType.SOLDIER && !ruinSpots.isEmpty() && rc.canSendMessage(robot.getLocation())){
           //im not checking also whether i can send him a message cuz im pretty sure "sense <=> can send" but look out for exceptions.
           int msg = Utils.encodeMessage(MESSAGE_TYPE.buildTowerHere,ruinSpots.removeFirst());
           rc.sendMessage(robot.getLocation(),msg);
@@ -128,7 +138,7 @@ public class Tower extends Globals {
     }
     if(!ruinCleanSpots.isEmpty()){
       for(RobotInfo robot : nearbyRobots) {
-        if(robot.getTeam() == rc.getTeam() && robot.getType() == UnitType.MOPPER){
+        if(robot.getTeam() == rc.getTeam() && robot.getType() == UnitType.MOPPER && !ruinCleanSpots.isEmpty() && rc.canSendMessage(robot.getLocation())){
           int msg = Utils.encodeMessage(MESSAGE_TYPE.sendMopperToClearRuin,ruinCleanSpots.removeFirst());
           rc.sendMessage(robot.getLocation(),msg);
         }

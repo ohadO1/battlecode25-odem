@@ -53,14 +53,7 @@ public class Utils extends Globals {
   public static MapLocation roamCircle(RobotController rc) throws GameActionException {
 
     //reset if havent used this for a while
-    if(rc.getRoundNum() - circleRoamUpdate > CIRCLE_ROAM_ROUNDS_TO_RESET) {
-
-//      if(!printed) {
-//        printed = true;
-//        for (double i = 0; i < 360; i += 10) {
-//          System.out.println("cos(" + i + ") = " + Math.cos(Math.toRadians(i)) + ", sin(" + i + ") = " + Math.sin(Math.toRadians(i)));
-//        }
-//      }
+    if(rc.getRoundNum() - circleRoamUpdate > CIRCLE_ROAM_ROUNDS_TO_RESET && false) {
 
       circleRoamRadius = 1;
       circleRoamDest = rc.getLocation();
@@ -69,7 +62,7 @@ public class Utils extends Globals {
     circleRoamUpdate = rc.getRoundNum();
 
     //set new dest
-    while(circleRoamDest == null || rc.getLocation().distanceSquaredTo(circleRoamDest) < 2 || !withinBounds(rc,circleRoamDest)) {
+    while(circleRoamDest == null || rc.getLocation().distanceSquaredTo(circleRoamDest) < 2 || !withinBounds(rc,circleRoamDest) || idleTime >= MAX_IDLE) {
 
       int quaterPrev = circleRoamAngle/90;
 
@@ -90,7 +83,10 @@ public class Utils extends Globals {
 //      System.out.println("-- circle: chose " + circleRoamDest + ", center: " + circleRoamCenter + ", r: " + circleRoamRadius + ", a: " + circleRoamAngle);
 
       //cancel if i know its unreachable
-      if(rc.canSenseLocation(circleRoamDest) && rc.senseRobotAtLocation(circleRoamDest) != null) circleRoamDest = null;
+      if(rc.canSenseLocation(circleRoamDest)) {
+        if (rc.senseRobotAtLocation(circleRoamDest) != null || rc.senseMapInfo(circleRoamDest).isWall())
+          circleRoamDest = null;
+      }
     }
 
     //approach dest
@@ -99,6 +95,27 @@ public class Utils extends Globals {
     rc.setIndicatorDot(circleRoamDest,204,0,204);
 
     return circleRoamDest;
+  }
+  /**
+   * picks a random location within the center of the map and aims to go there
+   *
+   * @param rc - RobotController
+   * @return destination - MapLocation
+   */
+  public static MapLocation roamDest(RobotController rc) throws GameActionException{
+    if(roamDestDest == null || rc.getLocation().distanceSquaredTo(roamDestDest) < 3 || (rc.canSenseLocation(roamDestDest) && rc.isLocationOccupied(roamDestDest)))
+    {
+      Random r = new Random();
+      int w = rc.getMapWidth();
+      int h = rc.getMapHeight();
+      int x = (int)(0.3*w + Math.random()*0.4*w);
+      int y = (int)(0.3*h + Math.random()*0.4*h);
+      roamDestDest = new MapLocation(x,y);
+    }
+
+    PathFinder.moveToLocation(rc,roamDestDest);
+
+    return roamDestDest;
   }
   public static boolean withinBounds(RobotController rc,MapLocation pos){
     if(pos.x < 0) return false;

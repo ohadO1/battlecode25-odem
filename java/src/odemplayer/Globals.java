@@ -2,7 +2,6 @@ package odemplayer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Random;
 
 import battlecode.common.Direction;
@@ -74,12 +73,23 @@ public class Globals {
 
   /********************** UTILITY VARIABLES *****************/
 
+  //circle roam
   static int circleRoamRadius = 0;
   static int circleRoamUpdate = -100;
   static int circleRoamAngle = 0;
   static MapLocation circleRoamCenter = new MapLocation(0,0);
   static MapLocation circleRoamDest = new MapLocation(0,0);
+  static final int CIRCLE_ROAM_ROUNDS_TO_RESET = 15;    //circle roam will reset its radius if not used after this amount of turns
+  static final int CIRCLE_ROAM_MAX_RADIUS = 30;
 
+  //dest roam
+  static MapLocation roamDestDest = null;
+
+  //general roam
+  static int idleTime = 0;
+  static MapLocation prevLocation;
+
+  static MapLocation spawnPoint = null;
   /********************** STARTEGY **************************/
 
 
@@ -119,6 +129,7 @@ public class Globals {
   static final UnitType EARLY_GAME_LAST_UNIT = UnitType.SPLASHER;
   static final int EARLY_CHIPS_THRESHOLD = 1200;
   static final int EARLY_PAINT_THRESHOLD = 300;
+  static final double INSTANT_UPGARDE_MULTI = 2;
 
   // at the start of the game, towers will only spawn these units,
   // and spawn more only if they have over EARLY_CHIPS_THRESHOLD.
@@ -144,8 +155,8 @@ public class Globals {
   static final double SOLDIER_PAINT_FOR_URGENT_REFILL = 0.15;           // when a soldier has under this % he will stop whatever hes doing and seek refill.
 
   /*** utility ***/
-  static final int CIRCLE_ROAM_ROUNDS_TO_RESET = 15;    //circle roam will reset its radius if not used after this amount of turns
-  static final int CIRCLE_ROAM_MAX_RADIUS = 30;
+
+  static final int MAX_IDLE = 20;//UnitType.SOLDIER.actionCooldown*2;
 
   /*** mopper ***/
   static final double MOPPER_PAINT_FOR_CASUAL_REFILL = 0.3;

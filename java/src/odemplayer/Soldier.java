@@ -92,6 +92,9 @@ class Soldier extends Globals {
           askToSaveDest = null;
         }
 
+        //roam algorithms
+        if(spawnPoint == null) spawnPoint = rc.getLocation();
+
         //look for ruins and enemy towers
         ruinDest = null;
         towerTarget = null;
@@ -137,7 +140,13 @@ class Soldier extends Globals {
         }
         //if didn't find ruin, wander around.
         else {
-          MapLocation nextLoc = Utils.roamCircle(rc);
+          MapLocation nextLoc = null;
+          switch (gamePhase){
+            case GAME_PHASE.early -> nextLoc = Utils.roamCircle(rc);
+            case GAME_PHASE.mid -> nextLoc = Utils.roamDest(rc);
+            case GAME_PHASE.late -> nextLoc = Utils.roamDest(rc);
+          }
+
 
           if (rc.canAttack(nextLoc)) {
             MapInfo nextLocInfo = rc.senseMapInfo(nextLoc);
