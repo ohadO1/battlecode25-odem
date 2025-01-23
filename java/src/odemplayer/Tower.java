@@ -130,6 +130,15 @@ public class Tower extends Globals {
     //we wont send multipile missions to single robots, so the order of these indicate priority.
     //we can later maybe genelerize it using some list but for now it seems overkill.
 
+    if (shouldSendMopperToCenter) {
+      for (RobotInfo robot : nearbyRobots) {
+        if (shouldSendMopperToCenter && robot.getTeam() == rc.getTeam()
+            && robot.type == UnitType.MOPPER) {
+          sendMopperToCenterOfMap(rc, robot);
+        }
+      }
+    }
+
     //send robots to help build a ruin
     if(!ruinSpots.isEmpty()){
       for(RobotInfo robot : nearbyRobots){
@@ -151,14 +160,7 @@ public class Tower extends Globals {
 
         }
       }
-      if (shouldSendMopperToCenter) {
-        for (RobotInfo robot : nearbyRobots) {
-          if (shouldSendMopperToCenter && robot.getTeam() == rc.getTeam()
-              && robot.type == UnitType.MOPPER) {
-            sendMopperToCenterOfMap(rc, robot);
-          }
-        }
-      }
+
     rc.setIndicatorString(Arrays.toString(unitsCreated));}
       
   }
