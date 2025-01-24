@@ -529,7 +529,7 @@ class Soldier extends Globals {
         }
 
         // done
-        if (rc.senseRobotAtLocation(towerTargetlocation) == null) {
+        if (rc.canSenseLocation(towerTargetlocation)&&rc.senseRobotAtLocation(towerTargetlocation) == null) {
           towerTarget = null;
           task = null;
           state = SOLDIER_STATES.roam;

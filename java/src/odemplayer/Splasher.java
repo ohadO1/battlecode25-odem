@@ -329,7 +329,7 @@ private void updateTargetArea() throws GameActionException {
             continue;
         }
 
-        if (rc.onTheMap(potentialTarget) && !rc.senseMapInfo(potentialTarget).isWall()) {
+        if (rc.onTheMap(potentialTarget) && rc.canSenseLocation(potentialTarget)&&!rc.senseMapInfo(potentialTarget).isWall()) {
             if (areaNeedsRepainting(potentialTarget)) {
                 randPointInArea = potentialTarget;
                 currentTarget = randPointInArea;
@@ -353,7 +353,7 @@ private void updateTargetArea() throws GameActionException {
             if (potentialTarget.equals(randPointInArea)) {
                 continue;
             }
-            if (rc.onTheMap(potentialTarget) && !rc.senseMapInfo(potentialTarget).isWall()) {
+            if (rc.onTheMap(potentialTarget) &&rc.canSenseLocation(potentialTarget)&& !rc.senseMapInfo(potentialTarget).isWall()) {
                 if (areaNeedsRepainting(potentialTarget)) {
                     randPointInArea = potentialTarget;
                     currentTarget = randPointInArea;
