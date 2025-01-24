@@ -19,6 +19,23 @@ public class Utils extends Globals {
    * @param rc - RobotController
    * @return next location - MapLocation
    */
+
+  public static MapLocation findClosestEnemyTile(RobotController rc) {
+
+    int closestDistanceFound = 99999;
+    MapLocation closestEnemyTile = null;
+    for (MapInfo tile : rc.senseNearbyMapInfos()) {
+      boolean isCloserThanClosestEnemyTile = rc.getLocation()
+          .distanceSquaredTo(tile.getMapLocation()) < closestDistanceFound;
+      if (tile.getPaint().isEnemy() && isCloserThanClosestEnemyTile) {
+        closestDistanceFound = rc.getLocation()
+            .distanceSquaredTo(tile.getMapLocation());
+        closestEnemyTile = tile.getMapLocation();
+      }
+    }
+    return closestEnemyTile;
+  }
+
   public static MapLocation roamGracefullyf(RobotController rc) throws GameActionException {
 
     MapInfo[] nearbyTiles = rc.senseNearbyMapInfos(2);
@@ -207,8 +224,18 @@ public class Utils extends Globals {
 
     MapLocation closestTower = findClosestTower(knownTowersInfos, rc);
     boolean isNotAllyTerritory = !rc.senseMapInfo(rc.getLocation()).getPaint().isAlly();
-    boolean isFarFromTower = closestTower.isWithinDistanceSquared(rc.getLocation(), 4);
+    boolean isStuckInTower = closestTower.isWithinDistanceSquared(rc.getLocation(), 1);
 
+    if (isNotAllyTerritory && isStuckInTower) {
+      Direction right = rc.getLocation().directionTo(closestTower);
+      if (rc.canMove(right)) {
+        rc.move(right);
+      } else if (rc.canMove(right.rotateLeft())) {
+        rc.move(right.rotateLeft());
+      } else if (rc.canMove(right.rotateRight())) {
+        rc.move(right.rotateRight());
+      }
+    }
     if (isNotAllyTerritory) {
       PathFinder.moveToLocation(rc, closestTower);
       return null;

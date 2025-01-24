@@ -192,6 +192,8 @@ public class Mopper extends Globals {
         }
         if (closestRobotFound != null) {
           PathFinder.moveToLocation(rc, closestRobotFound);
+        } else {
+          state = MOPPER_STATE.roam;
         }
 
         break;
@@ -199,14 +201,19 @@ public class Mopper extends Globals {
       case attackTile:
         rc.setIndicatorString("in attack tile");
         // if a tower is too close to the tile stop trying to remove the paint
+        tileToAttack = Utils.findClosestEnemyTile(rc);
+
+        if (tileToAttack == null) {
+          state = MOPPER_STATE.roam;
+          break;
+        }
+
         Direction dir = rc.getLocation().directionTo(tileToAttack);
         for (RobotInfo robot : rc.senseNearbyRobots(4)) {
 
           MapLocation foundRobotLocation = robot.getLocation();
           MapLocation estimatedNewLocation = rc.getLocation().add(dir);
-          // TODO: dynamic by towers - exit if thers a tower too close to the tile
-          //
-          if (estimatedNewLocation.distanceSquaredTo(foundRobotLocation) < 8 && robot.getType().isTowerType()
+          if (estimatedNewLocation.distanceSquaredTo(foundRobotLocation) < 4 && robot.getType().isTowerType()
               && robot.getTeam() != rc.getTeam()) {
             if (rc.canMove(dir.opposite())) {
               rc.move(dir.opposite());
@@ -215,13 +222,6 @@ public class Mopper extends Globals {
             state = MOPPER_STATE.roam;
             break;
           }
-        }
-
-        // if the tile is not an enemy tile, do not attack it.
-        if (rc.canSenseLocation(tileToAttack) && !rc.senseMapInfo(tileToAttack).getPaint().isEnemy()) {
-          tileToAttack = null;
-          state = MOPPER_STATE.roam;
-          break;
         }
 
         // if it can attack but theres a cooldown, wait for next turn
@@ -252,23 +252,6 @@ public class Mopper extends Globals {
           if (rc.canAttack(tileToAttack)) {
             rc.attack(tileToAttack);
           }
-          int closestDistanceFound = 99999;
-          for (MapInfo tile : rc.senseNearbyMapInfos()) {
-            boolean isCloserThanClosestEnemyTile = rc.getLocation()
-                .distanceSquaredTo(tile.getMapLocation()) < closestDistanceFound;
-            if (tile.getPaint().isEnemy() && isCloserThanClosestEnemyTile) {
-              closestDistanceFound = rc.getLocation()
-                  .distanceSquaredTo(tile.getMapLocation());
-              tileToAttack = tile.getMapLocation();
-            }
-          }
-          if (tileToAttack != null) {
-            break;
-
-          }
-          tileToAttack = null;
-          state = MOPPER_STATE.roam;
-          break;
         }
 
       case goToTile:
