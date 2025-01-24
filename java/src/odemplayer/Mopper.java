@@ -74,11 +74,11 @@ public class Mopper extends Globals {
         // TODO: function to avoid enemy towers
 
         // transfer paint
-        if (allyToRefill == null && state == MOPPER_STATE.roam) {
+        if (allyToRefill == null) {
           for (RobotInfo robot : rc.senseNearbyRobots()) {
             if ((robot.getType() == UnitType.SOLDIER || robot.getType() == UnitType.SPLASHER
                 || robot.getType() == UnitType.MOPPER) && robot.team == rc.getTeam()) {
-              if (((double) robot.getPaintAmount()) / robot.getType().paintCapacity <= 0.3 || rc.getPaint() <= 30) {
+              if ((((double) robot.getPaintAmount()) / robot.getType().paintCapacity <= 0.3) || rc.getPaint() <= 30) {
                 state = MOPPER_STATE.refillAlly;
                 allyToRefill = robot;
                 break;
@@ -86,7 +86,7 @@ public class Mopper extends Globals {
             }
           }
         }
-        if (allyToRefill != null) {
+        if (state == MOPPER_STATE.refillAlly) {
           break;
         }
 
@@ -131,7 +131,7 @@ public class Mopper extends Globals {
         rc.setIndicatorString("in refillAlly");
         int numToTransfer = rc.getPaint() > 60 ? 50 : rc.getPaint();
         // TODO: fix it, not good enough -
-        for (RobotInfo robot : rc.senseNearbyRobots()) {
+        for (RobotInfo robot : rc.senseNearbyRobots(3)) {
           if (robot.getType().isTowerType() && robot.getTeam() != rc.getTeam()) {
             allyToRefill = null;
             state = MOPPER_STATE.roam;
