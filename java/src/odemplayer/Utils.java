@@ -57,11 +57,14 @@ public class Utils extends Globals {
   public static MapLocation roamCircle(RobotController rc) throws GameActionException {
 
     // reset if havent used this for a while
-    if (rc.getRoundNum() - circleRoamUpdate > CIRCLE_ROAM_ROUNDS_TO_RESET && false) {
-
+    if (!circleRoamInit) {
+      circleRoamInit = true;
       circleRoamRadius = 1;
       circleRoamDest = rc.getLocation();
       circleRoamCenter = circleRoamDest;
+      MapLocation loc = rc.getLocation();
+
+      circleRoamAngle = (loc.y - (rc.getMapHeight() / 2)) / (loc.x - (rc.getMapWidth() / 2)) * 360;
     }
     circleRoamUpdate = rc.getRoundNum();
 
@@ -83,7 +86,7 @@ public class Utils extends Globals {
       double x = circleRoamCenter.x + circleRoamRadius * Math.cos(Math.toRadians(circleRoamAngle));
       double y = circleRoamCenter.y + circleRoamRadius * Math.sin(Math.toRadians(circleRoamAngle));
       x = Math.clamp((int) x, 0, rc.getMapWidth() - 1);
-      y = Math.clamp((int) y, 0, rc.getMapWidth() - 1);
+      y = Math.clamp((int) y, 0, rc.getMapHeight() - 1);
       circleRoamDest = new MapLocation((int) x, (int) y);
       // System.out.println("-- circle: chose " + circleRoamDest + ", center: " +
       // circleRoamCenter + ", r: " + circleRoamRadius + ", a: " + circleRoamAngle);
