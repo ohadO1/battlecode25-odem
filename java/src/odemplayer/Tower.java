@@ -171,21 +171,21 @@ public class Tower extends Globals {
   private static void attemptCreatingUnits(RobotController rc) throws GameActionException {
     Direction dir = directions[rng.nextInt(directions.length)];
     MapLocation nextLocation = rc.getLocation().add(dir);
-    int robotType = rng.nextInt(4);
+    int robotType = rng.nextInt(7);
 
-    if (robotType <= 1 && rc.canBuildRobot(EARLY_GAME_MAIN_UNIT, nextLocation) && rc.senseRobotAtLocation(nextLocation) == null) {
+    if (robotType <= 3 && rc.canBuildRobot(EARLY_GAME_MAIN_UNIT, nextLocation) && rc.senseRobotAtLocation(nextLocation) == null) {
       rc.buildRobot(EARLY_GAME_MAIN_UNIT, nextLocation);
       System.out.println("BUILT A " + EARLY_GAME_MAIN_UNIT.name());
       unitsCreated[EARLY_GAME_MAIN_UNIT.ordinal()]++;
     }
 
-    else if (robotType == 2 && rc.canBuildRobot(EARLY_GAME_LAST_UNIT, nextLocation) && rc.senseRobotAtLocation(nextLocation) == null) {
+    else if (robotType == 4 && rc.canBuildRobot(EARLY_GAME_LAST_UNIT, nextLocation) && rc.senseRobotAtLocation(nextLocation) == null) {
       rc.buildRobot(EARLY_GAME_LAST_UNIT, nextLocation);
       System.out.println("BUILT A " + EARLY_GAME_LAST_UNIT.name());
       unitsCreated[EARLY_GAME_LAST_UNIT.ordinal()]++;
     }
 
-    else if (robotType == 3 && rc.canBuildRobot(EARLY_GAME_SECONDARY_UNIT, nextLocation) && rc.senseRobotAtLocation(nextLocation) == null) {
+    else if (robotType >= 5 && rc.canBuildRobot(EARLY_GAME_SECONDARY_UNIT, nextLocation) && rc.senseRobotAtLocation(nextLocation) == null) {
       rc.buildRobot(EARLY_GAME_SECONDARY_UNIT, nextLocation);
       System.out.println("BUILT A " + EARLY_GAME_SECONDARY_UNIT.name());
       unitsCreated[EARLY_GAME_SECONDARY_UNIT.ordinal()]++;
