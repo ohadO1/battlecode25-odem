@@ -19,6 +19,7 @@ public class Splasher extends Globals {
     // Map parameters
     private int mapWidth;
     private int mapHeight;
+    private MapLocation spawnTowerLocation;
 
     // Splasher parameters
     private int splasherID;
@@ -104,7 +105,8 @@ public class Splasher extends Globals {
                             }
                             // Transition to moveToArea if needed
                             if (needsToMoveToNextArea(rc)) {
-                                updateTargetArea(); // Update target to a new area further away
+                                if (rc.getMapHeight() > 30) {updateTargetAreaBigMaps();}
+                                 else {updateTargetArea();}
                                 state = SPLASHER_STATE.moveToArea;
                             }
                             break;
@@ -121,7 +123,7 @@ public class Splasher extends Globals {
                                 }
                             } else {
 //TODO change this to go back to spawn tower or something
-                                moveWithinArea(rc);
+                                moveToLocation(rc, spawnTowerLocation);
                             }
                             break;
 
@@ -170,6 +172,7 @@ public class Splasher extends Globals {
         mapWidth = rc.getMapWidth();
         mapHeight = rc.getMapHeight();
         AreaStartY = 0;
+        spawnTowerLocation = findNearestAllyPaintTower(rc);
         AreaEndY = mapHeight - 1;
         updateSplasherInfo(rc); // Method to update totalSplashers and splasherIndex dynamically
     }
@@ -242,6 +245,10 @@ public class Splasher extends Globals {
      * @throws GameActionException
      */
     private void moveToLocation(RobotController rc, MapLocation targetLocation) throws GameActionException {
+        MapLocation loc = rc.getLocation();
+        if (isBadLand()&&rc.canAttack(loc)) {
+            rc.attack(loc);
+        }
         if (rc.isMovementReady() && rc.canMove(rc.getLocation().directionTo(targetLocation))) {
             PathFinder.moveToLocation(rc, targetLocation);
         } else {
@@ -327,12 +334,81 @@ private void updateTargetArea() throws GameActionException {
     }
 
     if (!newTargetFound) {
-//TODO- CHANGE THE LOGIC: If still no new target found, default to roaming within the Area 
+//TODO- CHANGE THE LOGIC: If still no new target found get to a new location
         farthestPointInArea = AreaCenter;
         currentTarget = farthestPointInArea;
     }
 }
+private void updateTargetAreaBigMaps() throws GameActionException {
+    int searchRange = Math.max(mapHeight, mapWidth); 
+    for (int range = 0; range <= searchRange; range += 5) {
+        for (int dy = -range; dy <= range; dy += 5) {
+            int newY = AreaCenter.y + dy;
+            if (newY == farthestPointInArea.y || newY < 0 || newY >= mapHeight) {
+                continue;
+            }
+            MapLocation potentialTarget = new MapLocation(AreaCenter.x, newY);
+            if (rc.onTheMap(potentialTarget) && !rc.senseMapInfo(potentialTarget).isWall()) {
+                if (areaNeedsRepainting(potentialTarget)) {
+                    // Set the new target area
+                    farthestPointInArea = potentialTarget;
+                    currentTarget = farthestPointInArea;
+                    rc.setIndicatorString("New target area selected at: " + farthestPointInArea);
+                    return;
+                }
+            }
+        }
+    }
+    MapLocation ExploreLoc = getRandomLocationNearby();
+    MapLocation RandomLoc = getRandomLocationOnEdge();
+    farthestPointInArea = (ExploreLoc == rc.getLocation()) ? RandomLoc : ExploreLoc;
+    currentTarget = farthestPointInArea;
+    return;
+}
+private MapLocation getRandomLocationOnEdge() {
+    int edge = rng.nextInt(4); // Pick a random region
+    int x = 0, y = 0;
+    switch (edge) {
+        case 0:
+            x = rng.nextInt(mapWidth); // Any x value
+            y = rng.nextInt(mapHeight / 4); // Bottom quarter of the map
+            break;
+        case 1:
+            x = rng.nextInt(mapWidth); // Any x value
+            y = mapHeight - 1 - rng.nextInt(mapHeight / 4); // Top quarter
+            break;
+        case 2:
+            x = rng.nextInt(mapWidth / 4); // Left quarter of the map
+            y = rng.nextInt(mapHeight); // Any y value
+            break;
+        case 3:
+            x = mapWidth - 1 - rng.nextInt(mapWidth / 4); // Right quarter
+            y = rng.nextInt(mapHeight); // Any y value
+            break;}
+    return new MapLocation(x, y);
+}
+private MapLocation getRandomLocationNearby() {
+    MapLocation myLocation = rc.getLocation();
+    int attempts = 10; 
+    for (int i = 0; i < attempts; i++) {
+        int dx = rng.nextBoolean() ? 9 :-9;
+        int dy = rng.nextBoolean() ? 9 :-9;
+        int newX = myLocation.x + dx;
+        int newY = myLocation.y + dy;
+        MapLocation potentialLocation = new MapLocation(newX, newY);
+        try{
+            if (rc.onTheMap(potentialLocation) && !rc.senseMapInfo(potentialLocation).isWall()) {
+                if (areaNeedsRepainting(potentialLocation)) {
+                    return potentialLocation;
+                }
+            }
+        } catch (GameActionException e) {
+            System.out.println("Error getting random location: " + e.getMessage());
 
+        }
+    }
+    return myLocation;
+}
 /**
  * Determines if the area around a given location needs repainting.
  *
@@ -345,16 +421,15 @@ private boolean areaNeedsRepainting(MapLocation location) throws GameActionExcep
 
     int unpaintedTiles = 0;
     for (MapInfo info : nearbyMapInfos) {
-        MapLocation loc = info.getMapLocation();
+        /*MapLocation loc = info.getMapLocation();
 
         if (!isInAssignedArea(loc)) {
             continue;
-        }
-
+        }*/
         PaintType paint = info.getPaint();
         if (paint == PaintType.EMPTY || paint.isEnemy()) {
             unpaintedTiles++;
-            if (unpaintedTiles > 5) {
+            if (unpaintedTiles > 4) {
                 return true;
             }
         }
@@ -536,6 +611,29 @@ private boolean areaNeedsRepainting(MapLocation location) throws GameActionExcep
         }
 
         return nearestPaintTower;
+    }
+    private boolean isBadLand(){
+        int badLand=0;
+        try{
+        for (Direction dir : directions) {
+            MapLocation adjacentLocation = rc.getLocation().add(dir);
+            if (rc.onTheMap(adjacentLocation)) { // Ensure the location is within the map
+                PaintType paint = rc.senseMapInfo(adjacentLocation).getPaint();
+                if (paint.isEnemy()) {
+                    badLand++;
+                }
+            }
+
+        }
+        PaintType currentPaint = rc.senseMapInfo(rc.getLocation()).getPaint();
+        if (currentPaint.isEnemy()) {
+            badLand++;
+        }
+        return (badLand > 5);
+        } catch (GameActionException e) {
+            System.out.println("Error checking bad land: " + e.getMessage());
+            return false;
+        }
     }
 }
 /*
