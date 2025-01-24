@@ -78,6 +78,7 @@ public class Globals {
   static int circleRoamRadius = 0;
   static int circleRoamUpdate = -100;
   static int circleRoamAngle = 0;
+  static boolean circleRoamInit = false;
   static MapLocation circleRoamCenter = new MapLocation(0,0);
   static MapLocation circleRoamDest = new MapLocation(0,0);
   static final int CIRCLE_ROAM_ROUNDS_TO_RESET = 15;    //circle roam will reset its radius if not used after this amount of turns
