@@ -256,7 +256,7 @@ public class Splasher extends Globals {
         randPointInArea = new MapLocation(mapWidth / 2, AreaEndY);
         // Adjust for walls
         try {
-            while (rc.onTheMap(randPointInArea) && rc.senseMapInfo(randPointInArea).isWall()) {
+            while (rc.onTheMap(randPointInArea) &&rc.canSenseLocation(randPointInArea)&& rc.senseMapInfo(randPointInArea).isWall()) {
                 randPointInArea = randPointInArea.translate(0, -1);
                 if (randPointInArea.y < 0) {
                     break; 
@@ -379,7 +379,7 @@ private void updateTargetAreaBigMaps() throws GameActionException {
                 continue;
             }
             MapLocation potentialTarget = new MapLocation(AreaCenter.x, newY);
-            if (rc.onTheMap(potentialTarget) && !rc.senseMapInfo(potentialTarget).isWall()) {
+            if (rc.onTheMap(potentialTarget) && rc.canSenseLocation(potentialTarget)&&!rc.senseMapInfo(potentialTarget).isWall()) {
                 if (areaNeedsRepainting(potentialTarget)) {
                     // Set the new target area
                     randPointInArea = potentialTarget;
@@ -428,7 +428,7 @@ private MapLocation getRandomLocationNearby() {
         int newY = myLocation.y + dy;
         MapLocation potentialLocation = new MapLocation(newX, newY);
         try{
-            if (rc.onTheMap(potentialLocation) && !rc.senseMapInfo(potentialLocation).isWall()) {
+            if (rc.onTheMap(potentialLocation) && rc.canSenseLocation(potentialLocation)&&!rc.senseMapInfo(potentialLocation).isWall()) {
                 if (areaNeedsRepainting(potentialLocation)) {
                     return potentialLocation;
                 }
