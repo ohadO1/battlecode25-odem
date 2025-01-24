@@ -71,8 +71,24 @@ public class Mopper extends Globals {
 
         Utils.mopperRoam(rc);
 
-
         // TODO: function to avoid enemy towers
+
+        // transfer paint
+        if (allyToRefill == null && state == MOPPER_STATE.roam) {
+          for (RobotInfo robot : rc.senseNearbyRobots()) {
+            if ((robot.getType() == UnitType.SOLDIER || robot.getType() == UnitType.SPLASHER
+                || robot.getType() == UnitType.MOPPER) && robot.team == rc.getTeam()) {
+              if (((double) robot.getPaintAmount()) / robot.getType().paintCapacity <= 0.3 || rc.getPaint() <= 30) {
+                state = MOPPER_STATE.refillAlly;
+                allyToRefill = robot;
+                break;
+              }
+            }
+          }
+        }
+        if (allyToRefill != null) {
+          break;
+        }
 
         MapInfo currentTile = rc.senseMapInfo(rc.getLocation());
         for (MapInfo tile : rc.senseNearbyMapInfos()) {
@@ -109,19 +125,6 @@ public class Mopper extends Globals {
           break;
         }
 
-        // transfer paint
-        if (allyToRefill == null && state == MOPPER_STATE.roam) {
-          for (RobotInfo robot : rc.senseNearbyRobots()) {
-            if ((robot.getType() == UnitType.SOLDIER || robot.getType() == UnitType.SPLASHER
-                || robot.getType() == UnitType.MOPPER) && robot.team == rc.getTeam()) {
-              if (((double) robot.getPaintAmount()) / robot.getType().paintCapacity <= 0.3 || rc.getPaint() <= 30) {
-                state = MOPPER_STATE.refillAlly;
-                allyToRefill = robot;
-                break;
-              }
-            }
-          }
-        }
         break;
 
       case refillAlly:
@@ -178,7 +181,7 @@ public class Mopper extends Globals {
           }
         }
 
-        // if the tile is an enemy tile, do not attack it.
+        // if the tile is not an enemy tile, do not attack it.
         if (rc.canSenseLocation(tileToAttack) && !rc.senseMapInfo(tileToAttack).getPaint().isEnemy()) {
           tileToAttack = null;
           state = MOPPER_STATE.roam;
@@ -206,6 +209,8 @@ public class Mopper extends Globals {
             boolean isCloserThanClosestEnemyTile = rc.getLocation()
                 .distanceSquaredTo(tile.getMapLocation()) < closestDistanceFound;
             if (tile.getPaint().isEnemy() && isCloserThanClosestEnemyTile) {
+              closestDistanceFound = rc.getLocation()
+                  .distanceSquaredTo(tile.getMapLocation());
               tileToAttack = tile.getMapLocation();
             }
           }
