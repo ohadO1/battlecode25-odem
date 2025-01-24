@@ -29,9 +29,14 @@ public class Splasher extends Globals {
     // Assigned Area
     private int AreaStartY;
     private int AreaEndY;
+    private int AreaStartX;
+    private int AreaEndX;
     private int AreaHeight;
     private MapLocation AreaCenter;
-    private MapLocation farthestPointInArea;
+    private MapLocation randPointInArea;
+    private MapLocation[] alreadyVisited = new MapLocation[30];
+    MapLocation closeLocList;
+
 
     // Paint thresholds
     private static final double PAINT_THRESHOLD_ATTACK = 50; 
@@ -70,17 +75,17 @@ public class Splasher extends Globals {
                     switch (state) {
                         case moveToArea:
                             if (currentTarget == null) {
-                                currentTarget = farthestPointInArea;
+                                currentTarget = randPointInArea;
                             }
                             // find and move to far point of the Splasher's area
-                            if (currentLocation.equals(farthestPointInArea)
-                                    || (rc.canSenseLocation(farthestPointInArea)
-                                    && rc.senseMapInfo(farthestPointInArea).isWall())) {
+                            if (currentLocation.equals(randPointInArea)
+                                    || (rc.canSenseLocation(randPointInArea)
+                                    && rc.senseMapInfo(randPointInArea).isWall())) {
                                 state = SPLASHER_STATE.attackArea;
                                 currentTarget = null;
                                 break;
                             } else {
-                                moveToLocation(rc, farthestPointInArea);
+                                moveToLocation(rc, randPointInArea);
                             }
                             if (currentPaint < PAINT_THRESHOLD_REFILL) {
                                 state = SPLASHER_STATE.seekRefill;
@@ -111,20 +116,46 @@ public class Splasher extends Globals {
                             }
                             break;
                         case seekRefill: 
-//TODO:::: it's a smarter version but to test that it's really better. older version is commented below
-                            nearestAllyPaintTower = findNearestAllyPaintTower(rc);
-                            if (nearestAllyPaintTower != null) {
-                                moveToLocation(rc, nearestAllyPaintTower);
-                                int paintNeeded = (int) (rc.getType().paintCapacity - currentPaint);
-                                if (rc.canTransferPaint(nearestAllyPaintTower, -paintNeeded)) {
-                                    rc.transferPaint(nearestAllyPaintTower, -paintNeeded);
-                                    state = SPLASHER_STATE.returnToArea;
-                                    currentTarget = null;
-                                }
-                            } else {
-//TODO change this to go back to spawn tower or something
-                                moveToLocation(rc, spawnTowerLocation);
+                            int missingPaint = rc.getType().paintCapacity - rc.getPaint();
+                            refillTower = null;
+                            for(RobotInfo tower : knownTowersInfos){
+                                if(refillTower == null ||
+                                    (tower.getLocation().distanceSquaredTo(rc.getLocation()) < refillTower.getLocation().distanceSquaredTo(rc.getLocation()))
+                                    && tower.getPaintAmount() >= missingPaint)
+                                refillTower = tower;
                             }
+                            //no tower has enough paint. just go to the nearest and wait there.
+                            if(refillTower == null) refillTower = Utils.findClosestTowerInfo(knownTowersInfos,rc);
+                            
+                            //move
+                            PathFinder.moveToLocation(rc,refillTower.getLocation());
+                            //am i there yet?
+
+                            try{
+                                if(rc.getLocation().distanceSquaredTo(refillTower.getLocation()) <= 2){
+
+                                    if(!rc.canTransferPaint(refillTower.getLocation(),-missingPaint)){
+                                        for(int i = 0; i < alreadyVisited.length; i++){
+                                            if(alreadyVisited[i] == null){
+                                                alreadyVisited[i] = refillTower.getLocation();
+                                                break;
+                                            }
+                                        } 
+                                        closeLocList = closestTower(rc.getLocation() , alreadyVisited);
+                                        moveToLocation(rc, closeLocList);
+                                    } else{
+                                        rc.transferPaint(refillTower.getLocation(),-missingPaint);
+                                        //for(int i = 0; i < alreadyVisited.length; i++){
+                                        //alreadyVisited[i] = null;
+                                        //    }
+                                        state = SPLASHER_STATE.returnToArea;
+                                    }
+                                }
+                            
+                            } catch (GameActionException e) {
+                                System.out.println("Error transferring paint: " + e.getMessage());
+                            }
+                    
                             break;
 
                         case returnToArea:
@@ -212,7 +243,7 @@ public class Splasher extends Globals {
      * @param rc The RobotController instance.
      * @throws GameActionException
      */
-    private void assignArea(RobotController rc) {
+    private void assignArea2(RobotController rc) {
         // Divide the map to horizontal bands
         AreaHeight = mapHeight / totalSplashers;
         AreaStartY = splasherIndex * AreaHeight;
@@ -222,12 +253,12 @@ public class Splasher extends Globals {
         // Assuming spawn area is at the bottom (y = 0)
         AreaCenter = new MapLocation(mapWidth / 2, (AreaStartY + AreaEndY) / 2);
 //TODO: Change this stupid logic 
-        farthestPointInArea = new MapLocation(mapWidth / 2, AreaEndY);
+        randPointInArea = new MapLocation(mapWidth / 2, AreaEndY);
         // Adjust for walls
         try {
-            while (rc.onTheMap(farthestPointInArea) && rc.senseMapInfo(farthestPointInArea).isWall()) {
-                farthestPointInArea = farthestPointInArea.translate(0, -1);
-                if (farthestPointInArea.y < 0) {
+            while (rc.onTheMap(randPointInArea) && rc.senseMapInfo(randPointInArea).isWall()) {
+                randPointInArea = randPointInArea.translate(0, -1);
+                if (randPointInArea.y < 0) {
                     break; 
                 }
             }
@@ -294,14 +325,14 @@ private void updateTargetArea() throws GameActionException {
         MapLocation potentialTarget = new MapLocation(AreaCenter.x, adjustedY);
 
         // Check if the potential target is not the current farthest point to prevent oscillation
-        if (potentialTarget.equals(farthestPointInArea)) {
+        if (potentialTarget.equals(randPointInArea)) {
             continue;
         }
 
         if (rc.onTheMap(potentialTarget) && !rc.senseMapInfo(potentialTarget).isWall()) {
             if (areaNeedsRepainting(potentialTarget)) {
-                farthestPointInArea = potentialTarget;
-                currentTarget = farthestPointInArea;
+                randPointInArea = potentialTarget;
+                currentTarget = randPointInArea;
                 newTargetFound = true;
                 break;
             }
@@ -319,13 +350,13 @@ private void updateTargetArea() throws GameActionException {
             }
 
             MapLocation potentialTarget = new MapLocation(AreaCenter.x, adjustedY);
-            if (potentialTarget.equals(farthestPointInArea)) {
+            if (potentialTarget.equals(randPointInArea)) {
                 continue;
             }
             if (rc.onTheMap(potentialTarget) && !rc.senseMapInfo(potentialTarget).isWall()) {
                 if (areaNeedsRepainting(potentialTarget)) {
-                    farthestPointInArea = potentialTarget;
-                    currentTarget = farthestPointInArea;
+                    randPointInArea = potentialTarget;
+                    currentTarget = randPointInArea;
                     newTargetFound = true;
                     break;
                 }
@@ -335,8 +366,8 @@ private void updateTargetArea() throws GameActionException {
 
     if (!newTargetFound) {
 //TODO- CHANGE THE LOGIC: If still no new target found get to a new location
-        farthestPointInArea = AreaCenter;
-        currentTarget = farthestPointInArea;
+        randPointInArea = AreaCenter;
+        currentTarget = randPointInArea;
     }
 }
 private void updateTargetAreaBigMaps() throws GameActionException {
@@ -344,16 +375,16 @@ private void updateTargetAreaBigMaps() throws GameActionException {
     for (int range = 0; range <= searchRange; range += 5) {
         for (int dy = -range; dy <= range; dy += 5) {
             int newY = AreaCenter.y + dy;
-            if (newY == farthestPointInArea.y || newY < 0 || newY >= mapHeight) {
+            if (newY == randPointInArea.y || newY < 0 || newY >= mapHeight) {
                 continue;
             }
             MapLocation potentialTarget = new MapLocation(AreaCenter.x, newY);
             if (rc.onTheMap(potentialTarget) && !rc.senseMapInfo(potentialTarget).isWall()) {
                 if (areaNeedsRepainting(potentialTarget)) {
                     // Set the new target area
-                    farthestPointInArea = potentialTarget;
-                    currentTarget = farthestPointInArea;
-                    rc.setIndicatorString("New target area selected at: " + farthestPointInArea);
+                    randPointInArea = potentialTarget;
+                    currentTarget = randPointInArea;
+                    rc.setIndicatorString("New target area selected at: " + randPointInArea);
                     return;
                 }
             }
@@ -361,8 +392,8 @@ private void updateTargetAreaBigMaps() throws GameActionException {
     }
     MapLocation ExploreLoc = getRandomLocationNearby();
     MapLocation RandomLoc = getRandomLocationOnEdge();
-    farthestPointInArea = (ExploreLoc == rc.getLocation()) ? RandomLoc : ExploreLoc;
-    currentTarget = farthestPointInArea;
+    randPointInArea = (ExploreLoc == rc.getLocation()) ? RandomLoc : ExploreLoc;
+    currentTarget = randPointInArea;
     return;
 }
 private MapLocation getRandomLocationOnEdge() {
@@ -449,7 +480,7 @@ private boolean areaNeedsRepainting(MapLocation location) throws GameActionExcep
                 continue;
             }
             int tilesPainted = calculateTilesPainted(rc, currentLocation.add(dir));
-            if (tilesPainted <= 2) { 
+            if (tilesPainted <= 0) { 
 //TODO: Check if a different value is better
                 continue;
             }
@@ -529,7 +560,7 @@ private boolean areaNeedsRepainting(MapLocation location) throws GameActionExcep
                     if (paint == PaintType.EMPTY) {
                         score += 10;
                     } else if (paint.isEnemy()) {
-                        score += 8;
+                        score += 20;
                     } else {
                         score += 1;
                     }
@@ -547,6 +578,9 @@ private boolean areaNeedsRepainting(MapLocation location) throws GameActionExcep
                     }
                 }
             }
+        }
+        if(bestScore <5){
+            assignArea(rc);
         }
         if (bestDir != null) {
             rc.move(bestDir);
@@ -635,6 +669,122 @@ private boolean areaNeedsRepainting(MapLocation location) throws GameActionExcep
             return false;
         }
     }
+    private void assignArea(RobotController rc){
+        try{
+        int areaIndex = rng.nextInt(8);
+        switch(areaIndex){
+            case 0:
+                AreaStartY = 0;
+                AreaEndY = mapHeight/3;
+                AreaStartX = 0;
+                AreaEndX = mapWidth/3;
+                AreaCenter = new MapLocation(mapWidth/6,mapHeight/6);
+                randPointInArea = getRandomPointInAssignedArea(AreaStartX ,AreaEndX ,AreaStartY,AreaEndY);
+
+                break;
+            case 1:
+                AreaStartY = 0;
+                AreaEndY = mapHeight/3;
+                AreaStartX = mapWidth/3;
+                AreaEndX = mapWidth*2/3;
+                AreaCenter = new MapLocation(mapWidth/2,mapHeight/6);
+                randPointInArea = getRandomPointInAssignedArea(AreaStartX ,AreaEndX ,AreaStartY,AreaEndY);
+
+                break;
+            case 2:
+                AreaStartY = 0;
+                AreaEndY = mapHeight/3;
+                AreaStartX = mapWidth*2/3;
+                AreaEndX = mapWidth;
+                AreaCenter = new MapLocation(mapWidth*5/6,mapHeight/6);
+                randPointInArea = getRandomPointInAssignedArea(AreaStartX ,AreaEndX ,AreaStartY,AreaEndY);
+
+                break;
+            case 3:
+                AreaStartY = mapHeight/3;
+                AreaEndY = mapHeight*2/3;
+                AreaStartX = 0;
+                AreaEndX = mapWidth/3;
+                AreaCenter = new MapLocation(mapWidth/6,mapHeight/2);
+                randPointInArea = getRandomPointInAssignedArea(AreaStartX ,AreaEndX ,AreaStartY,AreaEndY);
+
+                break;
+            case 5:
+                AreaStartY = mapHeight/3;
+                AreaEndY = mapHeight*2/3;
+                AreaStartX = mapWidth*2/3;
+                AreaEndX = mapWidth;
+                AreaCenter = new MapLocation(mapWidth*5/6,mapHeight/2);
+                randPointInArea = getRandomPointInAssignedArea(AreaStartX ,AreaEndX ,AreaStartY,AreaEndY);
+
+                break;
+            case 6:
+                AreaStartY = mapHeight*2/3;
+                AreaEndY = mapHeight;
+                AreaStartX = 0;
+                AreaEndX = mapWidth/3;
+                AreaCenter = new MapLocation(mapWidth/6,mapHeight*5/6);
+                randPointInArea = getRandomPointInAssignedArea(AreaStartX ,AreaEndX ,AreaStartY,AreaEndY);
+
+                break;
+            case 7:
+                AreaStartY = mapHeight*2/3;
+                AreaEndY = mapHeight;
+                AreaStartX = mapWidth/3;
+                AreaEndX = mapWidth*2/3;
+                AreaCenter = new MapLocation(mapWidth/2,mapHeight*5/6);
+                randPointInArea = getRandomPointInAssignedArea(AreaStartX ,AreaEndX ,AreaStartY,AreaEndY);
+
+                break;
+            case 4:
+                AreaStartY = mapHeight*2/3;
+                AreaEndY = mapHeight;
+                AreaStartX = mapWidth*2/3;
+                AreaEndX = mapWidth;
+                AreaCenter = new MapLocation(mapWidth*5/6,mapHeight*5/6);
+                randPointInArea = getRandomPointInAssignedArea(AreaStartX ,AreaEndX ,AreaStartY,AreaEndY);
+                break;
+            }
+         }catch (Exception e) {
+                System.out.println("Error adjusting farthest point: " + e.getMessage());
+            }        
+        
+
+    }
+    private MapLocation getRandomPointInAssignedArea(int x1 ,int x2 ,int y1,int y2) {
+        int width  = x2 - x1;
+        int height = y2 - y1;
+    
+        if (width < 1 || height < 1) {
+            return new MapLocation(AreaStartX, AreaStartY);
+        }
+        int randX = AreaStartX + rng.nextInt(width);
+        int randY = AreaStartY + rng.nextInt(height);
+    
+        return new MapLocation(randX, randY);
+    }
+    private MapLocation closestTower(MapLocation loc, MapLocation[] alreadyVisited){
+        double[] dist = new double[knownTowersInfos.size()];
+        int i = 0;
+        double closestSoFar = Integer.MAX_VALUE;
+        MapLocation closestTower = spawnTowerLocation;
+        for( RobotInfo towerInf : knownTowersInfos){
+            for(MapLocation alreadyVisitedLoc : alreadyVisited){
+                if(towerInf.getLocation().equals(alreadyVisitedLoc)){
+                    continue;
+                }
+            }
+                MapLocation tower = towerInf.getLocation();
+                dist[i] = Math.sqrt((tower.x - loc.x) * (tower.x - loc.x) + (tower.y - loc.y) * (tower.y - loc.y));
+                if(dist[i]< closestSoFar&&(!(dist[i]<2))){
+                    closestSoFar = dist[i];
+                    closestTower = tower;
+                }
+                i++;
+
+        } return closestTower;
+        
+    }
 }
 /*
  *             case seekRefill:
@@ -670,4 +820,21 @@ private boolean areaNeedsRepainting(MapLocation location) throws GameActionExcep
                 }
 
       break;
+ */
+/*
+ * //TODO:::: it's a smarter version but to test that it's really better. older version is commented below
+                            nearestAllyPaintTower = findNearestAllyPaintTower(rc);
+                            if (nearestAllyPaintTower != null) {
+                                moveToLocation(rc, nearestAllyPaintTower);
+                                int paintNeeded = (int) (rc.getType().paintCapacity - currentPaint);
+                                if (rc.canTransferPaint(nearestAllyPaintTower, -paintNeeded)) {
+                                    rc.transferPaint(nearestAllyPaintTower, -paintNeeded);
+                                    state = SPLASHER_STATE.returnToArea;
+                                    currentTarget = null;
+                                }
+                            } else {
+//TODO change this to go back to spawn tower or something
+                                moveToLocation(rc, spawnTowerLocation);
+                            }
+                            break;
  */
