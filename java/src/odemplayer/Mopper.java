@@ -221,9 +221,12 @@ public class Mopper extends Globals {
               rc.move(dir.opposite());
             }
             tileToAttack = null;
-            state = MOPPER_STATE.roam;
-            break;
           }
+        }
+
+        if (tileToAttack == null) {
+          state = MOPPER_STATE.roam;
+          break;
         }
 
         // if it can attack but theres a cooldown, wait for next turn
