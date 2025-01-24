@@ -26,7 +26,7 @@ public class Mopper extends Globals {
     attackEnemy,
     attackTile,
     refillAlly,
-    enemyDetected,
+    defendTerritory,
     clearRuin,
     goToTile
   }
@@ -71,8 +71,19 @@ public class Mopper extends Globals {
 
         Utils.mopperRoam(rc);
 
-        // TODO: function to avoid enemy towers
+        // check for offending robots
+        for (MapInfo location : rc.senseNearbyMapInfos()) {
+          RobotInfo robotAtLocation = rc.senseRobotAtLocation(location.getMapLocation());
+          if (robotAtLocation != null) {
+            boolean isEnemy = robotAtLocation.getTeam() != rc.getTeam();
+            boolean isOnOurTerritory = location.getPaint() == PaintType.ALLY_SECONDARY
+                || location.getPaint() == PaintType.ALLY_PRIMARY;
 
+            if (isEnemy && isOnOurTerritory && robotAtLocation.paintAmount >= 10) {
+              state = MOPPER_STATE.defendTerritory;
+            }
+          }
+        }
         // transfer paint
         if (allyToRefill == null) {
           for (RobotInfo robot : rc.senseNearbyRobots()) {
@@ -155,9 +166,34 @@ public class Mopper extends Globals {
         }
         break;
 
-      case enemyDetected:
-        mopperAttack(rc, rc.getLocation());
-        state = MOPPER_STATE.roam;
+      case defendTerritory:
+        rc.setIndicatorString("IN DEFEND");
+        MapLocation closestRobotFound = null;
+        int shortestDistance = 99999999;
+
+        for (MapInfo location : rc.senseNearbyMapInfos()) {
+          RobotInfo robotAtLocation = rc.senseRobotAtLocation(location.getMapLocation());
+          if (robotAtLocation != null) {
+            boolean isEnemy = robotAtLocation.getTeam() != rc.getTeam();
+            boolean isOnOurTerritory = location.getPaint() == PaintType.ALLY_SECONDARY
+                || location.getPaint() == PaintType.ALLY_PRIMARY;
+
+            if (isEnemy && isOnOurTerritory && robotAtLocation.paintAmount >= 10) {
+              int distance = rc.getLocation().distanceSquaredTo(robotAtLocation.getLocation());
+              if (shortestDistance > distance) {
+                shortestDistance = distance;
+                closestRobotFound = robotAtLocation.getLocation();
+              }
+              if (rc.canAttack(location.getMapLocation())) {
+                rc.attack(location.getMapLocation());
+              }
+            }
+          }
+        }
+        if (closestRobotFound != null) {
+          PathFinder.moveToLocation(rc, closestRobotFound);
+        }
+
         break;
 
       case attackTile:
@@ -202,8 +238,20 @@ public class Mopper extends Globals {
         } else {
           rc.setIndicatorString("in else");
           // attack, if you can to continue attacking, continue
-          rc.attack(tileToAttack);
+          for (MapInfo location : rc.senseNearbyMapInfos(2)) {
+            RobotInfo robotAtLocation = rc.senseRobotAtLocation(location.getMapLocation());
+            // check if theres a better tile to attack (one with a soldier on)
+            if (robotAtLocation != null && robotAtLocation.getTeam() != rc.getTeam()
+                && robotAtLocation.paintAmount >= 10
+                && rc.canAttack(location.getMapLocation())) {
+              rc.attack(location.getMapLocation());
+            }
+          }
 
+          // fallback
+          if (rc.canAttack(tileToAttack)) {
+            rc.attack(tileToAttack);
+          }
           int closestDistanceFound = 99999;
           for (MapInfo tile : rc.senseNearbyMapInfos()) {
             boolean isCloserThanClosestEnemyTile = rc.getLocation()
