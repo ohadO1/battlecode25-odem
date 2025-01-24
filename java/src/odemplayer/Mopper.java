@@ -206,7 +206,7 @@ public class Mopper extends Globals {
           MapLocation estimatedNewLocation = rc.getLocation().add(dir);
           // TODO: dynamic by towers - exit if thers a tower too close to the tile
           //
-          if (estimatedNewLocation.distanceSquaredTo(foundRobotLocation) < 3 && robot.getType().isTowerType()
+          if (estimatedNewLocation.distanceSquaredTo(foundRobotLocation) < 8 && robot.getType().isTowerType()
               && robot.getTeam() != rc.getTeam()) {
             if (rc.canMove(dir.opposite())) {
               rc.move(dir.opposite());
