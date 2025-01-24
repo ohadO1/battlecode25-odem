@@ -71,7 +71,6 @@ public class Mopper extends Globals {
 
         Utils.mopperRoam(rc);
 
-        boolean didFindEnemyTower = false;
 
         // TODO: function to avoid enemy towers
 
@@ -202,10 +201,10 @@ public class Mopper extends Globals {
           // attack, if you can to continue attacking, continue
           rc.attack(tileToAttack);
 
-          int cloesestDistanceFound = 99999;
-          for (MapInfo tile : rc.senseNearbyMapInfos(3)) {
+          int closestDistanceFound = 99999;
+          for (MapInfo tile : rc.senseNearbyMapInfos()) {
             boolean isCloserThanClosestEnemyTile = rc.getLocation()
-                .distanceSquaredTo(tile.getMapLocation()) < cloesestDistanceFound;
+                .distanceSquaredTo(tile.getMapLocation()) < closestDistanceFound;
             if (tile.getPaint().isEnemy() && isCloserThanClosestEnemyTile) {
               tileToAttack = tile.getMapLocation();
             }
