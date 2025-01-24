@@ -78,6 +78,10 @@ class Soldier extends Globals {
     if (rounds > MID_GAME_END)
       gamePhase = GAME_PHASE.late;
 
+    if (stateChanged) {
+      PathFinder.resetPathFinder();
+    }
+
     switch (state) {
       // region roam
       case roam:

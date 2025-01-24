@@ -71,22 +71,6 @@ public class PathFinder extends Globals {
 
   public static void moveToLocation(RobotController rc, MapLocation target) throws GameActionException {
 
-    Direction _dir = rc.getLocation().directionTo(target);
-    if(rc.canMove(_dir)) {
-      rc.move(_dir);
-      return;
-    }
-    /***********************/
-
-    //right by dest
-    if (rc.getLocation().distanceSquaredTo(target) <= 2) {
-      //blocked, abort.
-      Direction targetDir = rc.getLocation().directionTo(target);
-      if (!rc.canMove(targetDir)) {
-        return;
-      }
-    }
-
     if (!target.equals(prevDest)) {
       prevDest = target;
       line = createLine(rc.getLocation(), target);
@@ -98,6 +82,8 @@ public class PathFinder extends Globals {
 
     if (!isTracing) {
       Direction dir = rc.getLocation().directionTo(target);
+      rc.setIndicatorDot(rc.getLocation().add(dir), 255, 0, 0);
+      Clock.yield();
 
       if (rc.canMove(dir)) {
         rc.move(dir);
@@ -122,6 +108,14 @@ public class PathFinder extends Globals {
         }
       }
     }
+  }
+
+  public static void resetPathFinder() {
+    isTracing = false;
+    tracingDir = null;
+    line = null;
+    prevDest = null;
+    obstacleStartDist = 99999999;
   }
 
 }

@@ -62,7 +62,9 @@ public class Mopper extends Globals {
     // contantly
     // TODO: add check if task != null
 
-    // mopswing enemies - move to state
+    if (stateChanged) {
+      PathFinder.resetPathFinder();
+    }
 
     switch (state) {
       case roam:
