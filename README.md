@@ -1,19 +1,7 @@
-# Battlecode 2025 Scaffold
+# 🏆 MIT Battlecode 2025
 
-This is the Battlecode 2025 scaffold, containing starter code and useful scripts for running and compiling your bot.
+Team: [Ohad](https://github.com/ohadO1), [Itai](https://github.com/itaisinger) and [Oren](https://github.com/OrenVaknin) \
+This is the code we wrote for [MIT Battlecode 2025](https://battlecode.org/) — a project that took over our lives for a while. We barely slept, spent way too much time debugging, and somehow ended up with a bot we’re really proud of.
 
-**We are using a rewritten version of the client this year, so please let teh devs know 
-if you encounter any issues or have any feedback!**
+We pushed our strategy, optimization, and coding skills to the limit, and it paid off. We can’t wait to come back next year and take it even further. See you in 2026!
 
-### Project Structure
-
-- `java/`
-   Scaffold for the Java engine. If Java is your preferred language, please use this 
-   subdirectory and follow the README file included there.
-- `python/`
-   Scaffold for the Python engine. If Python is your preferred language, please use this subdirectory and follow the README file included there.
-
-Keep in mind, Python is **EXPERIMENTAL**, and not eligible to participate against other java bots. Please see the website for more details.
-
-
-![shrek human](https://github.com/user-attachments/assets/c1a7061b-7fb7-4576-a147-75f88164514a)
